@@ -12,6 +12,53 @@
   --color-libre: #4e9a68;
   --color-ocupado: #d25555;
   --color-accesible: #4c78b0;
+  --color-asfalto: #171717;
+  --color-marca: #e8e8e8;
+}
+
+.cajon[data-state='libre'] {
+  background: color-mix(in srgb, #4e9a68 28%, transparent);
+  border-color: #4e9a68;
+}
+
+.cajon[data-state='ocupado'] {
+  background: color-mix(in srgb, #d25555 32%, transparent);
+  border-color: #d25555;
+}
+
+.cajon[data-state='accesible'] {
+  background: color-mix(in srgb, #4c78b0 32%, transparent);
+  border-color: #4c78b0;
+}
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes salir {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+}
+
+.auto-entra {
+  animation: entrar 0.45s ease-out;
+}
+
+.auto-sale {
+  animation: salir 0.4s ease-in forwards;
 }
 
 body {
@@ -34,4 +81,11 @@ button {
 :focus-visible {
   outline: 2px solid #e7e7e7;
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auto-entra,
+  .auto-sale {
+    animation: none;
+  }
 }

@@ -16,7 +16,16 @@ export const chips: Chip[] = [
 const porUid = new Map(chips.map((chip) => [chip.uid.toUpperCase(), chip.cajonId]))
 
 export function cajonDeUid(uid: string): string | undefined {
-  return porUid.get(uid.trim().toUpperCase())
+  const limpio = uid.trim().toUpperCase()
+  if (limpio.startsWith('SIM:')) {
+    const id = limpio.slice(4)
+    return /^(A|B)-0[1-6]$/.test(id) ? id : undefined
+  }
+  return porUid.get(limpio)
+}
+
+export function uidParaSimulacion(cajonId: string): string {
+  return uidDeCajon(cajonId) ?? `SIM:${cajonId}`
 }
 
 export function uidDeCajon(cajonId: string): string | undefined {

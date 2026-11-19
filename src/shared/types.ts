@@ -57,3 +57,10 @@ export type TapEntrante = {
   uidChip: string
   usuario: string
 }
+
+export type LineaRegistro = {
+  timestamp: number
+  placa: string
+  cajonId: string
+  tipo: 'entrada' | 'salida'
+}

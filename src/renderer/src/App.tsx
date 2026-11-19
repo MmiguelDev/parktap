@@ -2,13 +2,19 @@ import { useEffect, useState } from 'react'
 import { chips } from '../../shared/cajones'
 import { listaUsuarios } from '../../shared/usuarios'
 import type { InfoServidor } from '../../shared/types'
+import { MapaEstacionamiento } from './MapaEstacionamiento'
 import { PanelNfc } from './PanelNfc'
 import { useParque } from './store'
 
+function hora(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+}
+
 function Simulador(): React.JSX.Element {
   const aplicar = useParque((estado) => estado.aplicar)
+  const usuarioId = useParque((estado) => estado.usuarioId)
+  const elegirUsuario = useParque((estado) => estado.elegirUsuario)
   const usuarios = listaUsuarios()
-  const [usuarioId, setUsuarioId] = useState(usuarios[0]?.id ?? '')
   const [cajonId, setCajonId] = useState(chips[0]?.cajonId ?? '')
   const [uidManual, setUidManual] = useState('')
   const [info, setInfo] = useState<InfoServidor | null>(null)
@@ -38,7 +44,7 @@ function Simulador(): React.JSX.Element {
           <select
             className="min-h-11 rounded-lg border border-line bg-inset px-3 text-paper"
             value={usuarioId}
-            onChange={(evento) => setUsuarioId(evento.target.value)}
+            onChange={(evento) => elegirUsuario(evento.target.value)}
           >
             {usuarios.map((usuario) => (
               <option key={usuario.id} value={usuario.id}>
@@ -104,6 +110,40 @@ function Simulador(): React.JSX.Element {
   )
 }
 
+function Registro(): React.JSX.Element {
+  const registro = useParque((estado) => estado.registro)
+  const libres = useParque(
+    (estado) => estado.cajones.filter((cajon) => cajon.estado === 'libre').length
+  )
+
+  return (
+    <section className="rounded-xl border border-line bg-surface p-5">
+      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Ocupación</h2>
+      <p className="mt-2 text-4xl leading-none font-bold">Quedan {libres} de 12</p>
+      <h2 className="mt-5 text-xs font-medium tracking-widest text-muted uppercase">
+        Registro en vivo
+      </h2>
+      {registro.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">Todavía no hay entradas ni salidas.</p>
+      ) : (
+        <ul className="mt-3 grid gap-2 text-sm">
+          {registro.map((linea) => (
+            <li
+              key={`${linea.timestamp}-${linea.cajonId}-${linea.tipo}`}
+              className="flex gap-3 border-b border-line py-2"
+            >
+              <time className="font-mono text-xs text-muted">{hora(linea.timestamp)}</time>
+              <span>
+                {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa} · {linea.cajonId}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 export default function App(): React.JSX.Element {
   const ultimo = useParque((estado) => estado.ultimo)
   const nfc = ultimo?.evento?.fuente === 'nfc'
@@ -143,9 +183,13 @@ export default function App(): React.JSX.Element {
           {nfc ? 'NFC conectado' : 'Modo simulación'}
         </p>
       </header>
-      <main className="mx-auto grid max-w-[1100px] gap-4 p-4 lg:grid-cols-2">
-        <Simulador />
-        <PanelNfc />
+      <main className="mx-auto grid max-w-[1400px] items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <MapaEstacionamiento />
+        <div className="grid gap-4">
+          <Registro />
+          <PanelNfc />
+          <Simulador />
+        </div>
       </main>
     </div>
   )

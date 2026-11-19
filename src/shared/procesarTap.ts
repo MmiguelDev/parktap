@@ -1,5 +1,6 @@
 import { cajonDeUid } from './cajones'
-import type { Cajon, Fuente, ResultadoTap } from './types'
+import { procesarEvento } from './procesarEvento'
+import type { Cajon, Evento, Fuente, ResultadoTap } from './types'
 import { usuarios } from './usuarios'
 
 function error(
@@ -32,27 +33,24 @@ export function procesarTap(
   if (!cajonId) return error('Chip no registrado', cajones, persona)
 
   const ahora = Date.now()
+  const uidEvento = uid.trim().toUpperCase()
   const ocupadoPorPersona = cajones.find((cajon) => cajon.ocupante === usuarioId)
   if (ocupadoPorPersona) {
-    const siguientes = cajones.map((cajon) =>
-      cajon.id === ocupadoPorPersona.id
-        ? { ...cajon, estado: 'libre' as const, ocupante: null, desde: null }
-        : cajon
-    )
+    const evento: Evento = {
+      uid: uidEvento,
+      cajonId: ocupadoPorPersona.id,
+      estado: 'libre',
+      fuente,
+      timestamp: ahora
+    }
     return {
       ok: true,
       mensaje: 'Salida registrada',
       tipo: 'salida',
       usuario: persona,
       infraccion: false,
-      cajones: siguientes,
-      evento: {
-        uid: uid.trim().toUpperCase(),
-        cajonId: ocupadoPorPersona.id,
-        estado: 'libre',
-        fuente,
-        timestamp: ahora
-      }
+      cajones: procesarEvento(cajones, evento, null),
+      evento
     }
   }
 
@@ -61,24 +59,20 @@ export function procesarTap(
   if (destino.estado === 'ocupado') return error('Cajón ocupado', cajones, persona)
 
   const infraccion = destino.accesible && !usuario.permisoAccesible
-  const siguientes = cajones.map((cajon) =>
-    cajon.id === destino.id
-      ? { ...cajon, estado: 'ocupado' as const, ocupante: usuarioId, desde: ahora }
-      : cajon
-  )
+  const evento: Evento = {
+    uid: uidEvento,
+    cajonId: destino.id,
+    estado: 'ocupado',
+    fuente,
+    timestamp: ahora
+  }
   return {
     ok: true,
     mensaje: 'Entrada registrada',
     tipo: 'entrada',
     usuario: persona,
     infraccion,
-    cajones: siguientes,
-    evento: {
-      uid: uid.trim().toUpperCase(),
-      cajonId: destino.id,
-      estado: 'ocupado',
-      fuente,
-      timestamp: ahora
-    }
+    cajones: procesarEvento(cajones, evento, usuarioId),
+    evento
   }
 }

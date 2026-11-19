@@ -1,4 +1,5 @@
-import { cajonesIniciales, uidDeCajon } from '../src/shared/cajones'
+import { cajonesIniciales, uidDeCajon, uidParaSimulacion } from '../src/shared/cajones'
+import { procesarEvento } from '../src/shared/procesarEvento'
 import { procesarTap } from '../src/shared/procesarTap'
 
 function assert(condicion: unknown, mensaje: string): void {
@@ -42,5 +43,23 @@ assert(resultado.mensaje === 'Cajón ocupado', 'no ocupa un cajón ajeno')
 cajones = cajonesIniciales()
 resultado = procesarTap(uid('A-02'), 'lucia', 'simulacion', cajones)
 assert(resultado.tipo === 'entrada' && !resultado.infraccion, 'lucía sí tiene permiso')
+
+const base = cajonesIniciales()
+const directo = procesarEvento(
+  base,
+  { uid: 'SIM:B-06', cajonId: 'B-06', estado: 'ocupado', fuente: 'simulacion', timestamp: 10 },
+  'ana'
+)
+assert(
+  directo.find((cajon) => cajon.id === 'B-06')?.ocupante === 'ana',
+  'procesarEvento ocupa B-06'
+)
+
+const porClic = procesarTap(uidParaSimulacion('B-06'), 'bruno', 'simulacion', base)
+assert(porClic.tipo === 'entrada' && porClic.evento?.cajonId === 'B-06', 'el clic simula B-06')
+assert(
+  porClic.cajones.find((cajon) => cajon.id === 'B-06')?.estado === 'ocupado',
+  'B-06 queda ocupado'
+)
 
 console.log('procesarTap ok')

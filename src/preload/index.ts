@@ -20,5 +20,5 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  window.parktap = parktap
+  ;(window as Window & { parktap: typeof parktap }).parktap = parktap
 }

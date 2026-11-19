@@ -1,0 +1,21 @@
+---
+description: Reglas de trabajo por fases para ParkTap
+alwaysApply: true
+---
+
+# ParkTap
+
+Haz solo la fase pedida (0 a 5). No empieces la siguiente por tu cuenta.
+
+Al terminar una fase:
+
+1. Verifica que compile y que se cumpla el criterio de "Terminada cuando".
+2. Resume en 3 a 5 líneas qué cambió y cómo probarlo.
+3. Haz `git add -A`, `git commit -m "Fase N: <resumen corto>"` y `git push` en `main`. Nunca uses `push --force`. Si no hay remoto, pregunta la URL. Si el push falla, muestra el error y espera.
+4. Detente y pregunta textualmente: "¿Continuamos con la Fase N+1?".
+
+Si el NFC falla, deja el plan B (simulación) funcionando y avísalo.
+
+Responde en español. El código y los nombres de variables siguen el estilo del proyecto.
+
+Interfaz oscura, minimalista y legible en proyector. Colores planos, sin neón. Usa los HEX de `docs/paleta.md`.

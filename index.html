@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParkTap · Bocetos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Barlow:wght@400;500;600&family=Barlow+Condensed:ital,wght@1,800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens por boceto ===== */
+[data-b="1"]{ /* 1 · Centro de control (oscuro, escala de grises) */
+  --bg:#111111; --surface:#1A1A1A; --surface-2:#242424; --border:#3A3A3A;
+  --text:#F3F3F3; --muted:#9A9A9A; --primary:#E4E4E4; --on-primary:#141414;
+  --free:#8C8C8C; --busy:#4A4A4A; --acc:#D8D8D8; --alert:#FFFFFF; --warn:#C2C2C2;
+  --ground:#141414; --bldg:#2C2C2C; --bldg-text:#E6E6E6; --road:#4A4A4A; --asphalt:#191919; --line:#E8E8E8; --car:#CFCFCF;
+  --font:"Space Grotesk",system-ui,sans-serif; --display:"Space Grotesk",sans-serif; --display-style:normal;
+  --radius:10px; --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 8px 24px rgba(0,0,0,.35);
+}
+[data-b="2"]{ /* 2 · Campus claro (blanco, teal) */
+  --bg:#F4F6F8; --surface:#FFFFFF; --surface-2:#EEF2F5; --border:#DDE3EA;
+  --text:#0F1B2A; --muted:#5B6B7E; --primary:#0F766E; --on-primary:#FFFFFF;
+  --free:#16A34A; --busy:#94A3B8; --acc:#2563EB; --alert:#E11D48; --warn:#D97706;
+  --ground:#E9EEF2; --bldg:#FFFFFF; --bldg-text:#334155; --road:#C9D2DC; --asphalt:#3A4150; --line:#F8FAFC; --car:#F1F5F9;
+  --font:"Plus Jakarta Sans",system-ui,sans-serif; --display:"Plus Jakarta Sans",sans-serif; --display-style:normal;
+  --radius:16px; --shadow:0 1px 2px rgba(15,27,42,.06),0 6px 20px rgba(15,27,42,.06);
+}
+[data-b="3"]{ /* 3 · Institucional UTCH (verde, amarillo, negro) */
+  --bg:#F5F5F0; --surface:#FFFFFF; --surface-2:#EEF0EA; --border:#D9DDD2;
+  --text:#121812; --muted:#5D655B; --primary:#0B6B35; --on-primary:#FFFFFF;
+  --free:#1F8A4C; --busy:#9AA096; --acc:#1D4ED8; --alert:#C62828; --warn:#E0A800;
+  --ground:#DADFD5; --bldg:#2B2F2A; --bldg-text:#FFFFFF; --road:#8C9188; --asphalt:#3D403B; --line:#F6D33C; --car:#F3F4EF;
+  --font:"Barlow",system-ui,sans-serif; --display:"Barlow Condensed",sans-serif; --display-style:italic;
+  --radius:4px; --shadow:0 1px 0 rgba(18,24,18,.06),0 4px 14px rgba(18,24,18,.08);
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--font);transition:background .25s ease-out,color .25s ease-out}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.mono{font-family:"JetBrains Mono",monospace;font-size:.85em}
+h1,.disp{font-family:var(--display);font-style:var(--display-style)}
+
+/* ===== Barra superior ===== */
+.switcher{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+[data-b="3"] .switcher{border-bottom:6px solid transparent;border-image:repeating-linear-gradient(-45deg,#F6D33C 0 12px,#121812 12px 24px) 6}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--surface-2);padding:4px;border-radius:calc(var(--radius) + 4px)}
+.seg button{border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:var(--radius);font-weight:600;min-height:40px;transition:background .15s ease-out,color .15s ease-out}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
+.seg button:active{transform:scale(.98)}
+.brand{display:flex;align-items:center;gap:8px;font:800 22px var(--display);font-style:var(--display-style)}
+.brand svg{color:var(--primary)}
+.note{color:var(--muted);font-size:13px;padding:8px 16px;max-width:1320px;margin:0 auto}
+
+/* ===== Layout ===== */
+.wrap{max-width:1320px;margin:0 auto;padding:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;min-width:0}
+.card h3{font:600 12px var(--font);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpi .v{font:800 40px/1.1 var(--display);font-style:var(--display-style)}
+.kpi .s{color:var(--muted);font-size:13px}
+.kpi .bar{height:6px;border-radius:99px;background:var(--surface-2);margin-top:12px;overflow:hidden}
+.kpi .bar i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .3s ease-out}
+.main{grid-template-columns:3fr 2fr}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--free);font-weight:700}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 currentColor}100%{box-shadow:0 0 0 8px transparent}}
+.rowhead{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.rowhead h3{margin:0}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px;border-bottom:1px solid var(--border)}
+td{padding:10px 8px;white-space:nowrap;border-bottom:1px solid var(--border)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.alert{background:color-mix(in srgb,var(--alert) 15%,transparent);color:var(--alert)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:color-mix(in srgb,var(--warn) 70%,var(--text))}
+.pill.ok{background:color-mix(in srgb,var(--free) 15%,transparent);color:var(--free)}
+.log ul{padding:0}
+.log li{list-style:none;display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.log time{color:var(--muted);margin-left:auto}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+
+/* ===== Mapas ===== */
+.map svg{width:100%;height:auto;display:block;border-radius:var(--radius)}
+.zone{cursor:pointer;transition:opacity .15s ease-out}
+.zone:hover{opacity:.8}
+.zone.sel path,.zone.sel rect{stroke:var(--text);stroke-width:3}
+.spot{cursor:pointer}
+.spot:hover rect:first-child{opacity:.5}
+[data-b="1"] .acc-mark{fill:#2C2C2C}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px}
+.zinfo{display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;margin-bottom:12px}
+.zinfo b{font:800 24px var(--display);font-style:var(--display-style)}
+
+/* ===== Alumno ===== */
+.student{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+@media (max-width:980px){.student{grid-template-columns:1fr}}
+.phone{background:var(--surface);border:1px solid var(--border);border-radius:32px;box-shadow:var(--shadow);padding:20px 16px;max-width:380px;width:100%;margin:0 auto}
+.avatar{width:56px;height:56px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font:800 20px var(--display)}
+.prof{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+.prof b{font:800 20px var(--display);font-style:var(--display-style);display:block}
+.status{background:var(--surface-2);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.status .big{font:800 32px var(--display);font-style:var(--display-style)}
+.cta{width:100%;border:0;background:var(--primary);color:var(--on-primary);padding:14px;border-radius:var(--radius);font-weight:700;min-height:48px;transition:transform .15s ease-out}
+.cta:active{transform:scale(.98)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.kv div{background:var(--surface-2);border-radius:var(--radius);padding:10px}
+.kv small{color:var(--muted);display:block;font-size:12px}
+.tabbar{display:flex;justify-content:space-around;border-top:1px solid var(--border);margin-top:16px;padding-top:12px;color:var(--muted);font-size:12px}
+.tabbar span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar .on{color:var(--primary);font-weight:700}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body data-b="1">
+
+<div class="switcher">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>
+    ParkTap
+  </div>
+  <div class="seg" role="group" aria-label="Boceto">
+    <button data-set-b="1" aria-pressed="true">1 · Centro de control</button>
+    <button data-set-b="2" aria-pressed="false">2 · Campus claro</button>
+    <button data-set-b="3" aria-pressed="false">3 · Institucional UTCH</button>
+  </div>
+  <div class="seg" role="group" aria-label="Vista">
+    <button data-view="dir" aria-pressed="true">Dirección</button>
+    <button data-view="alu" aria-pressed="false">Alumno</button>
+  </div>
+</div>
+<p class="note">Boceto de demo · datos simulados · mapa basado en el croquis "Cultura Vial UTCH" · da clic en una zona del campus para verla, y en un cajón del lote E–M para ocuparlo o liberarlo.</p>
+
+<!-- ================= DIRECCIÓN ================= -->
+<main class="wrap" id="v-dir">
+  <div class="rowhead" style="margin-bottom:16px">
+    <div>
+      <h1 style="font-size:32px;line-height:1.15;font-weight:800">Panel de dirección</h1>
+      <p style="color:var(--muted)">Universidad Tecnológica de Chihuahua · estacionamientos del campus · hoy</p>
+    </div>
+    <span class="live">En vivo · actualizado <span id="upd">hace 2 s</span></span>
+  </div>
+
+  <section class="grid kpis" aria-label="Indicadores">
+    <article class="card kpi"><h3>Autos en el campus</h3><div class="v" id="k-cars">0</div><div class="s" id="k-cap">de 0 cajones</div><div class="bar"><i id="k-bar" style="width:0"></i></div></article>
+    <article class="card kpi"><h3>Lugares libres</h3><div class="v" id="k-free" style="color:var(--free)">0</div><div class="s">disponibles ahora</div></article>
+    <article class="card kpi"><h3>Accesos denegados hoy</h3><div class="v" style="color:var(--alert)" id="k-den">0</div><div class="s">sin permiso o chip no registrado</div></article>
+    <article class="card kpi"><h3>Infracciones accesibles</h3><div class="v" style="color:var(--warn)" id="k-inf">0</div><div class="s">cajón accesible sin permiso</div></article>
+  </section>
+
+  <section class="grid main" style="margin-top:16px">
+    <article class="card map">
+      <div class="rowhead"><h3>Campus · ocupación por zona</h3>
+        <div class="legend" style="margin:0"><span><i style="background:var(--free)"></i>&lt; 70%</span><span><i style="background:var(--warn)"></i>70–90%</span><span><i style="background:var(--alert)"></i>&gt; 90%</span></div>
+      </div>
+      <div id="campus-dir"></div>
+    </article>
+    <article class="card map">
+      <div class="rowhead"><h3 id="lot-title">Lote E–M · cajones</h3><span class="pill ok" id="lot-pill">Quedan 0</span></div>
+      <div class="zinfo" id="zinfo"></div>
+      <div id="lot-dir"></div>
+      <div class="legend">
+        <span><i style="background:var(--free)"></i>Libre</span>
+        <span><i style="background:var(--busy)"></i>Ocupado</span>
+        <span><i style="background:var(--acc)"></i>Accesible</span>
+        <span><i style="background:var(--alert)"></i>Infracción</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid" style="margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+    <article class="card">
+      <h3>Accesos denegados recientes</h3>
+      <table>
+        <thead><tr><th>Hora</th><th>Placa</th><th>Zona</th><th>Motivo</th></tr></thead>
+        <tbody id="den"></tbody>
+      </table>
+    </article>
+    <article class="card log">
+      <h3>Registro en vivo</h3>
+      <ul id="log"></ul>
+    </article>
+    <article class="card">
+      <h3>Ocupación por hora <span style="text-transform:none;letter-spacing:0">(datos simulados)</span></h3>
+      <div id="chart"></div>
+    </article>
+  </section>
+</main>
+
+<!-- ================= ALUMNO ================= -->
+<main class="wrap" id="v-alu" hidden>
+  <div class="student">
+    <section class="phone" aria-label="App del alumno">
+      <div class="prof">
+        <div class="avatar">AR</div>
+        <div><b>Ana Rodríguez</b><span style="color:var(--muted);font-size:13px">Matrícula 2231045 · Ing. TI · Edificio I</span></div>
+      </div>
+      <div class="status">
+        <small style="color:var(--muted)">Mejor opción para ti (Acceso 2)</small>
+        <div class="big" id="a-zone">Lote E–M</div>
+        <span class="pill ok" id="a-free">0 lugares libres</span>
+      </div>
+      <button class="cta">Llévame al lugar libre</button>
+      <div class="kv">
+        <div><small>Placa</small><b class="mono">FTR-482-A</b></div>
+        <div><small>Chip NFC</small><b class="mono">04:A2:B3:C4</b></div>
+        <div><small>Permiso</small><b>Estudiante</b></div>
+        <div><small>Mi estado</small><b id="a-me">Sin estacionar</b></div>
+      </div>
+      <div class="card" style="padding:12px;box-shadow:none">
+        <h3 style="margin-bottom:8px">Mis últimas visitas</h3>
+        <ul style="padding:0;list-style:none;font-size:14px;display:grid;gap:6px">
+          <li style="display:flex;justify-content:space-between"><span>Ayer · Lote E–M · B-05</span><span style="color:var(--muted)">3 h 10 min</span></li>
+          <li style="display:flex;justify-content:space-between"><span>Lunes · Lote Sur I–K</span><span style="color:var(--muted)">5 h 02 min</span></li>
+        </ul>
+      </div>
+      <nav class="tabbar" aria-label="Navegación">
+        <span class="on">Mapa</span><span>Perfil</span><span>Historial</span>
+      </nav>
+    </section>
+    <div class="grid">
+      <section class="card map">
+        <div class="rowhead"><h3>Campus UTCH · estacionamientos de estudiantes</h3><span class="live">En vivo</span></div>
+        <div id="campus-alu"></div>
+      </section>
+      <section class="card map">
+        <div class="rowhead"><h3>Lote E–M · elige tu cajón</h3><span class="pill ok" id="lot-pill-alu">Quedan 0</span></div>
+        <div id="lot-alu"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+// ===================== Datos (simulados) =====================
+// Zonas basadas en el croquis "Cultura Vial UTCH". tipo: est = estudiantes, per = personal
+const zones = [
+  {id:"norte", name:"Lote Norte P–O", tipo:"est", cap:220, occ:176, shape:"path", d:"M0 235 L240 240 L246 345 L168 385 L152 455 L60 380 L0 330 Z"},
+  {id:"em",    name:"Lote E–M",       tipo:"est", cap:12,  occ:0,   shape:"rect", r:[340,418,76,80], demo:true},
+  {id:"moe",   name:"Lote M Oriente", tipo:"est", cap:40,  occ:31,  shape:"rect", r:[500,428,56,62]},
+  {id:"sur",   name:"Lote Sur I–K",   tipo:"est", cap:200, occ:118, shape:"path", d:"M575 690 L780 672 L786 752 L748 806 L575 770 Z"},
+  {id:"cg",    name:"Franja C–G",     tipo:"est", cap:30,  occ:28,  shape:"path", d:"M384 640 L394 640 L394 712 L522 712 L522 724 L384 724 Z"},
+  {id:"pB",    name:"Personal B",     tipo:"per", cap:20,  occ:15,  shape:"rect", r:[210,550,46,46]},
+  {id:"pF",    name:"Personal F",     tipo:"per", cap:16,  occ:9,   shape:"rect", r:[332,540,54,32]},
+  {id:"pD",    name:"Personal D–C",   tipo:"per", cap:14,  occ:12,  shape:"rect", r:[398,634,36,48]},
+  {id:"pE",    name:"Personal E",     tipo:"per", cap:12,  occ:6,   shape:"rect", r:[252,405,18,62]},
+  {id:"pL",    name:"Personal L",     tipo:"per", cap:40,  occ:22,  shape:"path", d:"M592 470 L640 470 L652 545 L612 548 L578 520 Z"},
+  {id:"pR",    name:"Personal R",     tipo:"per", cap:30,  occ:27,  shape:"rect", r:[682,432,54,70]},
+];
+const buildings = [["P",90,275,62,72],["O",170,295,60,70],["S",265,240,52,70],["J",266,352,28,30],["N",165,395,50,62],["E",285,415,46,64],["M",446,410,40,86],["L",604,448,30,30],["R",686,508,48,46],["B",280,540,40,76],["A",230,602,40,92],["F",340,580,40,50],["D",405,552,42,62],["C",335,650,42,70],["G",470,605,42,82],["I",556,548,40,82],["K",612,562,44,82],["Q",218,716,30,26],["H",268,722,40,24]];
+
+// Lote demo E–M: 12 cajones
+const spots=[];
+["A","B"].forEach((row,r)=>{for(let i=1;i<=6;i++) spots.push({id:`${row}-0${i}`,row:r,col:i-1,acc:(r===0&&i<=2),state:"free",plate:null,infr:false});});
+const plates=["FTR-482-A","KLM-219-B","PRT-903-C","DSA-118-A","MNB-774-C","QWE-650-B","ZXC-331-A","HJK-208-C"];
+[["A-01","FTR-482-A",false],["A-02","KLM-219-B",true],["A-04","PRT-903-C",false],["B-01","DSA-118-A",false],["B-02","MNB-774-C",false],["B-05","QWE-650-B",false],["B-06","ZXC-331-A",false]]
+  .forEach(([id,p,inf])=>{const s=spots.find(x=>x.id===id);s.state="busy";s.plate=p;s.infr=inf;});
+const log=[{t:"08:41",txt:"Entrada · KLM-219-B en E–M A-02",c:"alert",note:"sin permiso accesible"},{t:"08:37",txt:"Entrada · QWE-650-B en E–M B-05",c:"free"},{t:"08:30",txt:"Salida · HJK-208-C de E–M B-03",c:"busy"},{t:"08:22",txt:"Acceso denegado · chip no registrado · Acceso 1",c:"alert"}];
+const denied=[["08:41","KLM-219-B","Lote E–M","Cajón accesible sin permiso"],["08:22","—","Acceso 1","Chip no registrado"],["07:58","RTY-412-A","Personal R","Estudiante en zona de personal"],["07:40","KLM-219-B","Lote Sur","Cajón accesible sin permiso"]];
+let selZone="em";
+
+// ===================== Utilidades =====================
+const $=id=>document.getElementById(id);
+const pct=z=>z.occ/z.cap;
+const levelColor=p=>p>=.9?"var(--alert)":p>=.7?"var(--warn)":"var(--free)";
+const zoneShape=(z,fill,op,extra="")=>z.shape==="rect"
+  ?`<rect x="${z.r[0]}" y="${z.r[1]}" width="${z.r[2]}" height="${z.r[3]}" rx="4" fill="${fill}" fill-opacity="${op}" stroke="${fill}" stroke-width="2" ${extra}/>`
+  :`<path d="${z.d}" fill="${fill}" fill-opacity="${op}" stroke="${fill}" stroke-width="2" stroke-linejoin="round" ${extra}/>`;
+function zoneCenter(z){ if(z.shape==="rect") return [z.r[0]+z.r[2]/2,z.r[1]+z.r[3]/2];
+  const n=z.d.match(/[\d.]+/g).map(Number); let x=0,y=0; for(let i=0;i<n.length;i+=2){x+=n[i];y+=n[i+1];} return [x/(n.length/2),y/(n.length/2)]; }
+
+// ===================== Mapa del campus =====================
+function renderCampus(el,{studentOnly=false,best=null}={}){
+  let s=`<svg viewBox="0 225 800 600" role="img" aria-label="Croquis del campus UTCH con estacionamientos"><rect x="0" y="225" width="800" height="600" fill="var(--ground)"/>`;
+  // vialidades: Av. Cantera, circuito y vialidad interna con glorietas
+  s+=`<path d="M0 470 L40 515 L185 525 M40 515 L160 820 L780 820 L740 790" fill="none" stroke="var(--road)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s+=`<path d="M185 520 L620 520" fill="none" stroke="var(--road)" stroke-width="14" stroke-linecap="round"/>`;
+  s+=`<circle cx="240" cy="518" r="18" fill="none" stroke="var(--road)" stroke-width="10"/><circle cx="522" cy="518" r="18" fill="none" stroke="var(--road)" stroke-width="10"/>`;
+  s+=`<text x="70" y="660" transform="rotate(68 70 660)" font-size="14" font-weight="700" fill="var(--muted)" font-family="var(--font)">AV. CANTERA</text>`;
+  // accesos
+  [[178,512,"1"],[770,780,"2"]].forEach(([x,y,n])=>{s+=`<g><circle cx="${x}" cy="${y}" r="13" fill="var(--alert)"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" font-weight="800" fill="var(--on-primary)" font-family="var(--font)">${n}</text></g>`;});
+  s+=`<text x="128" y="500" font-size="11" font-weight="700" fill="var(--muted)" font-family="var(--font)">ACCESO 1</text><text x="700" y="800" font-size="11" font-weight="700" fill="var(--muted)" font-family="var(--font)">ACCESO 2</text>`;
+  // zonas
+  zones.forEach(z=>{
+    if(studentOnly&&z.tipo!=="est") return;
+    const p=pct(z), col=levelColor(p), sel=(!studentOnly&&z.id===selZone)||(studentOnly&&z.id===best);
+    const [cx,cy]=zoneCenter(z);
+    s+=`<g class="zone${sel?" sel":""}" data-z="${z.id}" tabindex="0" role="button" aria-label="${z.name}: ${z.cap-z.occ} libres de ${z.cap}">
+      ${zoneShape(z,col,z.tipo==="per"?.35:.55,z.tipo==="per"?'stroke-dasharray="5 4"':"")}
+      ${z.cap>=20||z.demo?`<g><rect x="${cx-24}" y="${cy-11}" width="48" height="22" rx="11" fill="var(--surface)" stroke="${col}"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="12" font-weight="800" fill="var(--text)" font-family="var(--font)">${Math.round(p*100)}%</text></g>`:""}
+      ${z.demo?`<text x="${cx}" y="${cy-18}" text-anchor="middle" font-size="10" font-weight="800" fill="var(--text)" font-family="var(--font)">NFC DEMO</text>`:""}
+    </g>`;
+  });
+  // edificios (encima de zonas)
+  buildings.forEach(([n,x,y,w,h])=>{s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="var(--bldg)" stroke="var(--border)" pointer-events="none"/><text x="${x+w/2}" y="${y+h/2+6}" text-anchor="middle" font-size="16" font-weight="800" fill="var(--bldg-text)" font-family="var(--font)">${n}</text>`;});
+  el.innerHTML=s+"</svg>";
+  el.querySelectorAll(".zone").forEach(g=>{
+    const act=()=>{ if(studentOnly) return; selZone=g.dataset.z; render(); };
+    g.addEventListener("click",act);
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act();}});
+  });
+}
+
+// ===================== Lote E–M top-down =====================
+function carSVG(x,y,w,h,flip){
+  return `<g transform="translate(${x},${y})${flip?` rotate(180 ${w/2} ${h/2})`:""}">
+    <rect x="${w*.2}" y="${h*.1}" width="${w*.6}" height="${h*.8}" rx="${w*.15}" fill="var(--car)" stroke="rgba(0,0,0,.3)"/>
+    <rect x="${w*.27}" y="${h*.22}" width="${w*.46}" height="${h*.14}" rx="4" fill="rgba(0,0,0,.55)"/>
+    <rect x="${w*.27}" y="${h*.66}" width="${w*.46}" height="${h*.1}" rx="4" fill="rgba(0,0,0,.35)"/></g>`;
+}
+function accIcon(cx,cy){return `<g transform="translate(${cx-12},${cy-12})" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="4" r="2" fill="#fff" stroke="none"/><path d="M12 7v6h5l2 5"/><path d="M9 10a6 6 0 1 0 6 8"/></g>`;}
+function renderLot(el){
+  const W=760,H=400,sw=(W-12*7)/6,sh=130;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Lote E–M, 12 cajones"><rect width="${W}" height="${H}" fill="var(--asphalt)"/>`;
+  for(let x=20;x<W;x+=60) s+=`<rect x="${x}" y="${H/2-2}" width="30" height="4" fill="var(--line)" opacity=".7"/>`;
+  s+=`<path d="M${W-80} ${H/2-24} l24 0 l0 -8 l16 14 l-16 14 l0 -8 l-24 0z" fill="var(--line)" opacity=".55"/>`;
+  s+=`<text x="12" y="${H/2+28}" fill="var(--line)" opacity=".75" font-size="12" font-weight="700" font-family="var(--font)">← EDIFICIO E</text><text x="${W-12}" y="${H/2+28}" text-anchor="end" fill="var(--line)" opacity=".75" font-size="12" font-weight="700" font-family="var(--font)">EDIFICIO M →</text>`;
+  spots.forEach(p=>{
+    const x=12+p.col*(sw+12), y=p.row===0?10:H-sh-10;
+    const col=p.infr?"var(--alert)":p.state==="busy"?"var(--busy)":p.acc?"var(--acc)":"var(--free)";
+    s+=`<g class="spot${p.infr?" blink":""}" data-id="${p.id}" tabindex="0" role="button" aria-label="Cajón ${p.id} ${p.state==="busy"?"ocupado":"libre"}${p.acc?", accesible":""}">
+      <rect x="${x}" y="${y}" width="${sw}" height="${sh}" rx="6" fill="${col}" opacity="${p.state==="busy"&&!p.infr?.35:.22}" stroke="${col}" stroke-width="2"/>
+      <rect x="${x}" y="${p.row===0?y:y+sh-6}" width="${sw}" height="6" fill="${col}"/>`;
+    if(p.acc&&p.state!=="busy") s+=`<rect class="acc-mark" x="${x+sw/2-16}" y="${y+sh/2-16}" width="32" height="32" rx="6" fill="var(--acc)"/>`+accIcon(x+sw/2,y+sh/2);
+    if(p.state==="busy") s+=carSVG(x,y,sw,sh,p.row===1);
+    s+=`<text x="${x+8}" y="${p.row===0?y+sh-10:y+22}" fill="var(--line)" font-size="13" font-weight="800" font-family="var(--font)">${p.id}</text></g>`;
+  });
+  el.innerHTML=s+"</svg>";
+  el.querySelectorAll(".spot").forEach(g=>{
+    const act=()=>toggle(g.dataset.id);
+    g.addEventListener("click",act);
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act();}});
+  });
+}
+function toggle(id){
+  const p=spots.find(s=>s.id===id), now=new Date().toTimeString().slice(0,5);
+  if(p.state==="busy"){ log.unshift({t:now,txt:`Salida · ${p.plate} de E–M ${id}`,c:"busy"}); Object.assign(p,{state:"free",plate:null,infr:false}); }
+  else{ const plate=plates[Math.floor(Math.random()*plates.length)], infr=p.acc&&Math.random()<.5;
+    Object.assign(p,{state:"busy",plate,infr});
+    log.unshift({t:now,txt:`Entrada · ${plate} en E–M ${id}`,c:infr?"alert":"free",note:infr?"sin permiso accesible":null});
+    if(infr) denied.unshift([now,plate,"Lote E–M","Cajón accesible sin permiso"]);
+  }
+  render();
+}
+
+// ===================== Gráfica =====================
+function renderChart(){
+  const data=[18,46,78,92,96,88,70,74,85,60,34,15], hrs=[7,8,9,10,11,12,13,14,15,16,17,18];
+  const W=520,H=180,bw=W/data.length;
+  let s=`<svg viewBox="0 0 ${W} ${H+24}" style="width:100%;height:auto" role="img" aria-label="Ocupación del campus por hora; pico de 96% a las 11">`;
+  [0,50,100].forEach(v=>{const y=H-v/100*(H-10); s+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--border)"/><text x="${W-2}" y="${y-4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}%</text>`;});
+  data.forEach((v,i)=>{const h=v/100*(H-10), c=levelColor(v/100);
+    s+=`<rect x="${i*bw+5}" y="${H-h}" width="${bw-10}" height="${h}" rx="3" fill="${c}"><title>${hrs[i]}:00 · ${v}%</title></rect><text x="${i*bw+bw/2}" y="${H+16}" text-anchor="middle" font-size="11" fill="var(--muted)">${hrs[i]}h</text>`;});
+  $("chart").innerHTML=s+"</svg>";
+}
+
+// ===================== Render =====================
+function render(){
+  const em=zones.find(z=>z.id==="em");
+  em.occ=spots.filter(s=>s.state==="busy").length;
+  const cap=zones.reduce((a,z)=>a+z.cap,0), occ=zones.reduce((a,z)=>a+z.occ,0), inf=spots.filter(s=>s.infr).length;
+  $("k-cars").textContent=occ; $("k-cap").textContent=`de ${cap} cajones · ${Math.round(occ/cap*100)}% ocupado`;
+  $("k-bar").style.width=(occ/cap*100)+"%"; $("k-free").textContent=cap-occ;
+  $("k-den").textContent=denied.length; $("k-inf").textContent=inf;
+  const lotFree=em.cap-em.occ;
+  [["lot-pill",lotFree],["lot-pill-alu",lotFree]].forEach(([id,f])=>{const el=$(id);el.textContent=f?`Quedan ${f}`:"Lleno";el.className="pill "+(f?"ok":"alert");});
+  // panel de zona seleccionada
+  const z=zones.find(x=>x.id===selZone);
+  $("lot-title").textContent=`${z.name} · ${z.tipo==="est"?"estudiantes":"personal"}`;
+  $("zinfo").innerHTML=`<span><b>${z.cap-z.occ}</b> libres</span><span><b>${z.occ}</b> ocupados</span><span class="pill ${pct(z)>=.9?"alert":pct(z)>=.7?"warn":"ok"}">${Math.round(pct(z)*100)}% ocupación</span>`;
+  $("lot-dir").hidden=!z.demo;
+  if(!z.demo) $("zinfo").innerHTML+=`<p style="color:var(--muted);font-size:13px;width:100%">Vista por cajón disponible solo en el lote de la demo (E–M).</p>`;
+  // alumno: mejor zona de estudiantes con más libres
+  const best=zones.filter(x=>x.tipo==="est").sort((a,b)=>(b.cap-b.occ)-(a.cap-a.occ))[0];
+  $("a-zone").textContent=em.cap-em.occ>0?"Lote E–M":best.name;
+  $("a-free").textContent=`${lotFree} lugares libres en E–M`;
+  // listas
+  $("log").innerHTML=log.slice(0,6).map(l=>`<li><span class="dot" style="background:var(--${l.c})"></span><div><div>${l.txt}</div>${l.note?`<span class="pill alert">${l.note}</span>`:""}</div><time>${l.t}</time></li>`).join("");
+  $("den").innerHTML=denied.slice(0,5).map(d=>`<tr><td class="mono">${d[0]}</td><td class="mono">${d[1]}</td><td>${d[2]}</td><td><span class="pill ${d[3].includes("accesible")?"alert":"warn"}">${d[3]}</span></td></tr>`).join("");
+  renderCampus($("campus-dir"));
+  renderCampus($("campus-alu"),{studentOnly:true,best:"em"});
+  if(z.demo) renderLot($("lot-dir"));
+  renderLot($("lot-alu"));
+}
+
+// ===================== Controles =====================
+document.querySelectorAll("[data-set-b]").forEach(b=>b.onclick=()=>{
+  document.body.dataset.b=b.dataset.setB;
+  document.querySelectorAll("[data-set-b]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+});
+document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
+  $("v-dir").hidden=b.dataset.view!=="dir"; $("v-alu").hidden=b.dataset.view!=="alu";
+  document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+});
+let sec=2; setInterval(()=>{sec=(sec+1)%6;$("upd").textContent=`hace ${sec} s`;},1000);
+renderChart(); render();
+</script>
+</body>
+</html>

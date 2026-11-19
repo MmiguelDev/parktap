@@ -39,6 +39,7 @@ export const useParque = create<Parque>((set, get) => ({
         ? {
             timestamp: resultado.evento.timestamp,
             placa: resultado.usuario.placa,
+            rol: resultado.usuario.rol,
             cajonId: resultado.evento.cajonId,
             tipo: resultado.tipo
           }
@@ -47,7 +48,7 @@ export const useParque = create<Parque>((set, get) => ({
       resultado.infraccion && resultado.evento && resultado.usuario
         ? {
             timestamp: resultado.evento.timestamp,
-            texto: `${resultado.evento.cajonId} · ${resultado.usuario.placa} · sin permiso accesible`
+            texto: `${resultado.evento.cajonId} · ${resultado.usuario.placa} · ${resultado.motivoInfraccion ?? 'infracción'}`
           }
         : null
     const ahora = resultado.evento?.timestamp ?? Date.now()
@@ -56,6 +57,7 @@ export const useParque = create<Parque>((set, get) => ({
       nuevos.push({
         timestamp: ahora,
         placa: resultado.usuario?.placa ?? '—',
+        rol: resultado.usuario?.rol ?? null,
         zona: resultado.evento?.cajonId ? 'Lote E–M' : 'Acceso',
         motivo: resultado.mensaje
       })
@@ -64,8 +66,9 @@ export const useParque = create<Parque>((set, get) => ({
       nuevos.push({
         timestamp: ahora,
         placa: resultado.usuario.placa,
+        rol: resultado.usuario.rol,
         zona: 'Lote E–M',
-        motivo: 'Cajón accesible sin permiso'
+        motivo: resultado.motivoInfraccion ?? 'Infracción'
       })
     }
     set({

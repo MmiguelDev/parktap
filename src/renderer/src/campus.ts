@@ -1,4 +1,4 @@
-import type { Cajon } from '../../shared/types'
+import type { Cajon, TipoCajon } from '../../shared/types'
 
 export type Zona = {
   id: string
@@ -26,7 +26,7 @@ export const zonas: Zona[] = [
     id: 'em',
     name: 'Lote E–M',
     tipo: 'est',
-    cap: 12,
+    cap: 4,
     occ: 0,
     shape: 'rect',
     r: [340, 418, 76, 80],
@@ -213,43 +213,53 @@ function silla(cx: number, cy: number): string {
   return `<g transform="translate(${cx - 12},${cy - 12})" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4" r="2" fill="#fff" stroke="none"/><path d="M12 7v6h5l2 5"/><path d="M9 10a6 6 0 1 0 6 8"/></g>`
 }
 
+const COLOR_TIPO: Record<Cajon['tipo'], string> = {
+  alumno: 'var(--free)',
+  maestro: 'var(--staff)',
+  accesible: 'var(--acc)'
+}
+
+const ETIQUETA_TIPO: Record<Cajon['tipo'], string> = {
+  alumno: 'ALUMNOS',
+  maestro: 'MAESTROS',
+  accesible: 'ACCESIBLE'
+}
+
+// Lote de la demo visto desde arriba. Una fila de cajones (A-01 a A-04) y el carril debajo.
 export function svgLote(cajones: Cajon[], placaDe: (id: string | null) => string | null): string {
   const ancho = 760
-  const alto = 400
-  const hueco = (ancho - 12 * 7) / 6
-  const altoCajon = 130
-  let svg = `<svg viewBox="0 0 ${ancho} ${alto}" role="img" aria-label="Lote E–M, 12 cajones"><rect width="${ancho}" height="${alto}" fill="var(--asphalt)"/>`
+  const altoCajon = 170
+  const alto = altoCajon + 120
+  const n = Math.max(cajones.length, 1)
+  const hueco = (ancho - 16 * (n + 1)) / n
+  const carril = altoCajon + 60
+  let svg = `<svg viewBox="0 0 ${ancho} ${alto}" role="img" aria-label="Lote E–M, ${cajones.length} cajones"><rect width="${ancho}" height="${alto}" fill="var(--asphalt)"/>`
   for (let x = 20; x < ancho; x += 60) {
-    svg += `<rect x="${x}" y="${alto / 2 - 2}" width="30" height="4" fill="var(--line)" opacity=".7"/>`
+    svg += `<rect x="${x}" y="${carril - 2}" width="30" height="4" fill="var(--line)" opacity=".7"/>`
   }
-  svg += `<path d="M${ancho - 80} ${alto / 2 - 24} l24 0 l0 -8 l16 14 l-16 14 l0 -8 l-24 0z" fill="var(--line)" opacity=".55"/>`
-  svg += `<text x="12" y="${alto / 2 + 28}" fill="var(--line)" opacity=".75" font-size="12" font-weight="700" font-family="var(--font)">← EDIFICIO E</text><text x="${ancho - 12}" y="${alto / 2 + 28}" text-anchor="end" fill="var(--line)" opacity=".75" font-size="12" font-weight="700" font-family="var(--font)">EDIFICIO M →</text>`
-  cajones.forEach((cajon) => {
-    const fila = cajon.id.startsWith('B') ? 1 : 0
-    const columna = Number(cajon.id.slice(3)) - 1
-    const x = 12 + columna * (hueco + 12)
-    const y = fila === 0 ? 10 : alto - altoCajon - 10
+  svg += `<path d="M${ancho - 80} ${carril - 24} l24 0 l0 -8 l16 14 l-16 14 l0 -8 l-24 0z" fill="var(--line)" opacity=".55"/>`
+  svg += `<text x="16" y="${carril + 30}" fill="var(--line)" opacity=".75" font-size="13" font-weight="700" font-family="var(--font)">← EDIFICIO E</text><text x="${ancho - 16}" y="${carril + 30}" text-anchor="end" fill="var(--line)" opacity=".75" font-size="13" font-weight="700" font-family="var(--font)">EDIFICIO M →</text>`
+  cajones.forEach((cajon, indice) => {
+    const x = 16 + indice * (hueco + 16)
+    const y = 16
     const ocupado = cajon.estado === 'ocupado'
-    const color = cajon.infraccion
-      ? 'var(--alert)'
-      : ocupado
-        ? 'var(--busy)'
-        : cajon.accesible
-          ? 'var(--acc)'
-          : 'var(--free)'
-    const opacidad = ocupado && !cajon.infraccion ? 0.35 : 0.22
-    svg += `<g class="spot${cajon.infraccion ? ' blink' : ''}" data-id="${cajon.id}" tabindex="0" role="button" aria-label="Cajón ${cajon.id} ${ocupado ? 'ocupado' : 'libre'}${cajon.accesible ? ', accesible' : ''}">
-      <rect x="${x}" y="${y}" width="${hueco}" height="${altoCajon}" rx="6" fill="${color}" opacity="${opacidad}" stroke="${color}" stroke-width="2"/>
-      <rect x="${x}" y="${fila === 0 ? y : y + altoCajon - 6}" width="${hueco}" height="6" fill="${color}"/>`
-    if (cajon.accesible && !ocupado) {
-      svg += `<rect class="acc-mark" x="${x + hueco / 2 - 16}" y="${y + altoCajon / 2 - 16}" width="32" height="32" rx="6" fill="var(--acc)"/>${silla(x + hueco / 2, y + altoCajon / 2)}`
+    const colorTipo = COLOR_TIPO[cajon.tipo]
+    const color = cajon.infraccion ? 'var(--alert)' : ocupado ? 'var(--busy)' : colorTipo
+    const opacidad = ocupado && !cajon.infraccion ? 0.4 : 0.25
+    const estado = ocupado ? 'OCUPADO' : 'LIBRE'
+    svg += `<g class="spot${cajon.infraccion ? ' blink' : ''}" data-id="${cajon.id}" tabindex="0" role="button" aria-label="Cajón ${cajon.id}, ${ETIQUETA_TIPO[cajon.tipo].toLowerCase()}, ${estado.toLowerCase()}">
+      <rect x="${x}" y="${y}" width="${hueco}" height="${altoCajon}" rx="8" fill="${color}" opacity="${opacidad}" stroke="${color}" stroke-width="3"/>
+      <rect x="${x}" y="${y}" width="${hueco}" height="8" rx="4" fill="${colorTipo}"/>`
+    if (cajon.tipo === 'accesible' && !ocupado) {
+      svg += `<rect class="acc-mark" x="${x + hueco / 2 - 18}" y="${y + altoCajon / 2 - 18}" width="36" height="36" rx="6" fill="var(--acc)"/>${silla(x + hueco / 2, y + altoCajon / 2)}`
     }
-    if (ocupado) svg += auto(x, y, hueco, altoCajon, fila === 1)
+    if (ocupado) svg += auto(x, y + 14, hueco, altoCajon - 28, false)
+    svg += `<text x="${x + 10}" y="${y + 30}" fill="var(--line)" font-size="15" font-weight="800" font-family="var(--font)">${cajon.id}</text>`
+    svg += `<text x="${x + hueco - 10}" y="${y + 30}" text-anchor="end" fill="${colorTipo}" font-size="11" font-weight="800" font-family="var(--font)">${ETIQUETA_TIPO[cajon.tipo]}</text>`
     const placa = placaDe(cajon.ocupante)
-    svg += `<text x="${x + 8}" y="${fila === 0 ? y + altoCajon - 10 : y + 22}" fill="var(--line)" font-size="13" font-weight="800" font-family="var(--font)">${cajon.id}</text>`
-    if (placa) {
-      svg += `<text x="${x + 8}" y="${fila === 0 ? y + 20 : y + altoCajon - 10}" fill="var(--line)" font-size="10" font-family="var(--font)" opacity=".8">${placa}</text>`
-    }
+    const pie = cajon.infraccion ? `SIN PERMISO · ${placa ?? ''}` : (placa ?? estado)
+    svg += `<rect x="${x + 8}" y="${y + altoCajon - 34}" width="${hueco - 16}" height="24" rx="12" fill="var(--surface)" opacity=".92"/>`
+    svg += `<text x="${x + hueco / 2}" y="${y + altoCajon - 17}" text-anchor="middle" fill="${cajon.infraccion ? 'var(--alert)' : ocupado ? 'var(--text)' : colorTipo}" font-size="${cajon.infraccion ? 11 : 12}" font-weight="800" font-family="var(--font)">${pie}</text>`
     svg += `</g>`
   })
   return `${svg}</svg>`
@@ -268,5 +278,59 @@ export function svgGrafica(): string {
     const h = (valor / 100) * (alto - 10)
     svg += `<rect x="${indice * paso + 5}" y="${alto - h}" width="${paso - 10}" height="${h}" rx="3" fill="${colorNivel(valor / 100)}"><title>${marcas[indice]}:00 · ${valor}%</title></rect><text x="${indice * paso + paso / 2}" y="${alto + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${marcas[indice]}h</text>`
   })
+  return `${svg}</svg>`
+}
+
+// Número pseudoaleatorio fijo por zona, para que la vista simulada no cambie en cada render.
+function semilla(texto: string): () => number {
+  let h = 2166136261
+  for (const letra of texto) h = Math.imul(h ^ letra.charCodeAt(0), 16777619)
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507)
+    h = Math.imul(h ^ (h >>> 13), 3266489909)
+    return ((h ^= h >>> 16) >>> 0) / 4294967296
+  }
+}
+
+// Vista de cajones para los lotes sin chips: ocupación simulada con zona.occ de zona.cap.
+// Estudiantes: casi todos de alumnos y unos accesibles. Personal: de maestros y unos accesibles.
+export function svgLoteSimulado(zona: Zona): string {
+  const ancho = 760
+  const columnas = zona.cap > 100 ? 25 : zona.cap > 30 ? 20 : Math.min(zona.cap, 10)
+  const filas = Math.ceil(zona.cap / columnas)
+  const hueco = 4
+  const wCajon = (ancho - 32 - hueco * (columnas - 1)) / columnas
+  const hCajon = Math.min(wCajon * 1.6, 70)
+  const carril = 28
+  // Dos filas de cajones encaradas y un carril entre cada par.
+  const yFila = (fila: number): number =>
+    16 + fila * (hCajon + hueco) + Math.floor(fila / 2) * carril
+  const alto = yFila(filas - 1) + hCajon + 16
+  const azar = semilla(zona.id)
+  const ocupados = new Set<number>()
+  while (ocupados.size < Math.min(zona.occ, zona.cap)) ocupados.add(Math.floor(azar() * zona.cap))
+  const accesibles = Math.max(1, Math.round(zona.cap * 0.04))
+  const tipoBase: TipoCajon = zona.tipo === 'per' ? 'maestro' : 'alumno'
+
+  let svg = `<svg viewBox="0 0 ${ancho} ${alto}" role="img" aria-label="${zona.name}, ${zona.cap} cajones, ${zona.occ} ocupados (simulado)"><rect width="${ancho}" height="${alto}" fill="var(--asphalt)"/>`
+  for (let fila = 1; fila < filas; fila += 2) {
+    if (fila + 1 >= filas) break
+    const y = yFila(fila) + hCajon + carril / 2 + hueco / 2
+    for (let x = 20; x < ancho; x += 60) {
+      svg += `<rect x="${x}" y="${y - 2}" width="30" height="4" fill="var(--line)" opacity=".5"/>`
+    }
+  }
+  for (let i = 0; i < zona.cap; i++) {
+    const fila = Math.floor(i / columnas)
+    const x = 16 + (i % columnas) * (wCajon + hueco)
+    const y = yFila(fila)
+    const tipo: TipoCajon = i < accesibles ? 'accesible' : tipoBase
+    const ocupado = ocupados.has(i)
+    const color = ocupado ? 'var(--busy)' : COLOR_TIPO[tipo]
+    svg += `<rect x="${x}" y="${y}" width="${wCajon}" height="${hCajon}" rx="3" fill="${color}" opacity="${ocupado ? 0.55 : 0.3}" stroke="${color}" stroke-width="1.5"/>`
+    if (ocupado) {
+      svg += `<rect x="${x + wCajon * 0.18}" y="${y + hCajon * 0.15}" width="${wCajon * 0.64}" height="${hCajon * 0.7}" rx="${wCajon * 0.15}" fill="var(--line)" opacity=".55"/>`
+    }
+  }
   return `${svg}</svg>`
 }

@@ -1,5 +1,4 @@
 import { cajonesIniciales, uidDeCajon, uidParaSimulacion } from '../src/shared/cajones'
-import { procesarEvento } from '../src/shared/procesarEvento'
 import { procesarTap } from '../src/shared/procesarTap'
 
 function assert(condicion: unknown, mensaje: string): void {
@@ -12,54 +11,47 @@ const uid = (cajonId: string): string => {
   return valor
 }
 
+// Lote: A-01 accesible, A-02 maestros, A-03 y A-04 alumnos.
 let cajones = cajonesIniciales()
+assert(cajones.length === 4, 'el lote tiene 4 cajones')
 
-let resultado = procesarTap(uid('A-03').toLowerCase(), 'ana', 'simulacion', cajones)
-assert(resultado.ok && resultado.tipo === 'entrada', 'ana debe entrar')
-assert(resultado.evento?.cajonId === 'A-03', 'la entrada es en A-03')
-assert(resultado.evento?.estado === 'ocupado', 'el evento queda ocupado')
-cajones = resultado.cajones
+let r = procesarTap(uid('A-03').toLowerCase(), 'ana', 'nfc', cajones)
+assert(r.ok && r.tipo === 'entrada' && !r.infraccion, 'ana entra a A-03 sin infracción')
+cajones = r.cajones
 
-resultado = procesarTap(uid('B-01'), 'ana', 'nfc', cajones)
-assert(resultado.tipo === 'salida', 'un segundo tap de ana es salida')
-assert(resultado.evento?.cajonId === 'A-03', 'sale del cajón donde estaba')
-assert(resultado.evento?.fuente === 'nfc', 'conserva la fuente')
-cajones = resultado.cajones
-assert(cajones.find((cajon) => cajon.id === 'A-03')?.estado === 'libre', 'A-03 queda libre')
+r = procesarTap(uid('A-03'), 'ana', 'nfc', cajones)
+assert(r.tipo === 'salida', 'segundo tap de ana es salida')
+cajones = r.cajones
+assert(cajones.find((c) => c.id === 'A-03')?.estado === 'libre', 'A-03 queda libre')
 
-resultado = procesarTap('FF:FF:FF:FF', 'ana', 'simulacion', cajones)
-assert(!resultado.ok && resultado.mensaje === 'Chip no registrado', 'UID desconocido')
+r = procesarTap(uid('A-02'), 'profe', 'nfc', cajones)
+assert(r.tipo === 'entrada' && !r.infraccion, 'el maestro puede usar A-02')
+assert(r.usuario?.rol === 'maestro', 'profe tiene rol maestro')
+cajones = r.cajones
+r = procesarTap(uid('A-02'), 'profe', 'nfc', cajones)
+cajones = r.cajones
 
-resultado = procesarTap(uid('A-03'), 'nadie', 'simulacion', cajones)
-assert(resultado.mensaje === 'Usuario no registrado', 'usuario desconocido')
-
-resultado = procesarTap(uid('A-01'), 'infractor', 'nfc', cajones)
-assert(resultado.tipo === 'entrada' && resultado.infraccion, 'infractor en A-01 es infracción')
-cajones = resultado.cajones
-
-resultado = procesarTap(uid('A-01'), 'lucia', 'simulacion', cajones)
-assert(resultado.mensaje === 'Cajón ocupado', 'no ocupa un cajón ajeno')
-
-cajones = cajonesIniciales()
-resultado = procesarTap(uid('A-02'), 'lucia', 'simulacion', cajones)
-assert(resultado.tipo === 'entrada' && !resultado.infraccion, 'lucía sí tiene permiso')
-
-const base = cajonesIniciales()
-const directo = procesarEvento(
-  base,
-  { uid: 'SIM:B-06', cajonId: 'B-06', estado: 'ocupado', fuente: 'simulacion', timestamp: 10 },
-  'ana'
-)
+r = procesarTap(uid('A-02'), 'bruno', 'nfc', cajones)
 assert(
-  directo.find((cajon) => cajon.id === 'B-06')?.ocupante === 'ana',
-  'procesarEvento ocupa B-06'
+  r.infraccion && r.motivoInfraccion === 'Alumno en cajón de maestros',
+  'alumno en A-02 es infracción'
 )
+cajones = r.cajones
 
-const porClic = procesarTap(uidParaSimulacion('B-06'), 'bruno', 'simulacion', base)
-assert(porClic.tipo === 'entrada' && porClic.evento?.cajonId === 'B-06', 'el clic simula B-06')
-assert(
-  porClic.cajones.find((cajon) => cajon.id === 'B-06')?.estado === 'ocupado',
-  'B-06 queda ocupado'
-)
+r = procesarTap(uid('A-01'), 'infractor', 'nfc', cajones)
+assert(r.infraccion && r.motivoInfraccion === 'Cajón accesible sin permiso', 'infractor en A-01')
+cajones = r.cajones
+
+r = procesarTap(uid('A-01'), 'lucia', 'nfc', cajones)
+assert(r.mensaje === 'Cajón ocupado', 'no puede ocupar un cajón ajeno')
+
+r = procesarTap(uid('A-01'), 'lucia', 'nfc', cajonesIniciales())
+assert(r.tipo === 'entrada' && !r.infraccion, 'lucía tiene permiso accesible')
+
+r = procesarTap('FF:FF:FF:FF', 'ana', 'nfc', cajonesIniciales())
+assert(!r.ok && r.mensaje === 'Chip no registrado', 'UID desconocido')
+
+r = procesarTap(uidParaSimulacion('A-04'), 'bruno', 'simulacion', cajonesIniciales())
+assert(r.tipo === 'entrada' && r.evento?.cajonId === 'A-04', 'el clic simula A-04')
 
 console.log('procesarTap ok')

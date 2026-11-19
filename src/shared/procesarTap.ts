@@ -1,6 +1,6 @@
 import { cajonDeUid } from './cajones'
 import { procesarEvento } from './procesarEvento'
-import type { Cajon, Evento, Fuente, ResultadoTap } from './types'
+import type { Cajon, Evento, Fuente, ResultadoTap, Usuario } from './types'
 import { usuarios } from './usuarios'
 
 function error(
@@ -15,8 +15,16 @@ function error(
     evento: null,
     usuario,
     infraccion: false,
+    motivoInfraccion: null,
     cajones
   }
+}
+
+// Reglas de uso de cada tipo de cajón. Se permite estacionar, pero se marca infracción.
+export function revisarPermiso(cajon: Cajon, usuario: Usuario): string | null {
+  if (cajon.tipo === 'accesible' && !usuario.permisoAccesible) return 'Cajón accesible sin permiso'
+  if (cajon.tipo === 'maestro' && usuario.rol !== 'maestro') return 'Alumno en cajón de maestros'
+  return null
 }
 
 export function procesarTap(
@@ -49,6 +57,7 @@ export function procesarTap(
       tipo: 'salida',
       usuario: persona,
       infraccion: false,
+      motivoInfraccion: null,
       cajones: procesarEvento(cajones, evento, null),
       evento
     }
@@ -58,7 +67,8 @@ export function procesarTap(
   if (!destino) return error('Chip no registrado', cajones, persona)
   if (destino.estado === 'ocupado') return error('Cajón ocupado', cajones, persona)
 
-  const infraccion = destino.accesible && !usuario.permisoAccesible
+  const motivoInfraccion = revisarPermiso(destino, usuario)
+  const infraccion = motivoInfraccion !== null
   const evento: Evento = {
     uid: uidEvento,
     cajonId: destino.id,
@@ -72,7 +82,8 @@ export function procesarTap(
     tipo: 'entrada',
     usuario: persona,
     infraccion,
-    cajones: procesarEvento(cajones, evento, usuarioId, infraccion),
+    motivoInfraccion,
+    cajones: procesarEvento(cajones, evento, usuarioId, infraccion, motivoInfraccion),
     evento
   }
 }

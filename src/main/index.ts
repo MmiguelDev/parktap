@@ -17,7 +17,9 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      contextIsolation: true
+      contextIsolation: true,
+      // La alarma de infracción pita sin esperar un clic.
+      autoplayPolicy: 'no-user-gesture-required'
     }
   })
   ventanaPrincipal = ventana

@@ -21,7 +21,23 @@ En la ventana de ParkTap:
 
 La página del celular, en la misma laptop, también sirve para el plan B: abre `http://127.0.0.1:3000` y usa un botón de cajón. El panel de la ventana de escritorio debe cambiar.
 
-## 2. Certificado HTTPS
+## 2. Permitir el NFC en Chrome
+
+Web NFC solo funciona en un **sitio seguro**. Hay dos caminos. **Usen el A**: es el más rápido y no necesita certificado.
+
+### Opción A (recomendada): marcar la laptop como sitio seguro en Chrome
+
+En el celular Android, con Chrome:
+
+1. Abre `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
+2. Pon **Enabled**.
+3. En el cuadro de texto escribe la dirección que imprime `npm run dev`, con el puerto. Por ejemplo: `http://192.168.43.12:3000`.
+4. Pulsa **Relaunch**.
+5. Abre esa misma dirección. Ya no debe aparecer el aviso rojo de "no es un sitio seguro".
+
+Si la IP cambia (otra red u otro hotspot), hay que volver a escribirla en el flag.
+
+### Opción B: certificado HTTPS con mkcert
 
 En CachyOS:
 
@@ -57,6 +73,20 @@ Copia el `rootCA.pem` de esa carpeta al celular e instálalo como certificado de
 
 Quédate con el plan B. En la página del celular usa el botón del cajón, o en la laptop usa **Simular tap**. La demo sigue.
 
+## 4. Registrar los chips (una sola vez)
+
+Ya no hay que copiar los UID al código. Se registran desde el celular:
+
+1. En la página del celular pulsa **Registrar chip**.
+2. Elige el cajón (por ejemplo **A-01**) y pulsa **Activar lector NFC**.
+3. Acerca el celular al chip pegado en ese cajón. Debe decir **Chip registrado en A-01** y vibrar.
+4. El selector pasa solo al siguiente cajón. Acerca el siguiente chip, y así con los 8.
+5. Abajo aparece la tabla **Chips registrados** con cada cajón y su UID.
+
+El registro se guarda en `data/chips.json`, en la raíz del proyecto. Súbanlo a git para que todo el equipo use los mismos chips. Si un chip se registra otra vez en otro cajón, se mueve: un chip va en un solo cajón y un cajón tiene un solo chip.
+
+Si `data/chips.json` no existe, la app usa los UID de ejemplo de `src/shared/cajones.ts` (`04:00:00:00:00:A1` y similares).
+
 ### Modo Leer UID
 
-En la página del celular pulsa **Modo Leer UID** y acerca cada chip. Anota el `serialNumber` y reemplaza el placeholder en `src/shared/cajones.ts`. Los UID de ejemplo son `04:00:00:00:00:A1` y similares. A-01 y A-02 son los accesibles. `04:00:00:00:00:R1` es el chip de repuesto, asignado a B-02.
+Pulsa **Leer UID** y acerca cualquier chip para ver su número sin registrar nada. Sirve para revisar si un chip funciona.

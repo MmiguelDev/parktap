@@ -7,11 +7,13 @@
   --muted: #9a9a9a;
   --primary: #e4e4e4;
   --on-primary: #141414;
-  --free: #8c8c8c;
-  --busy: #4a4a4a;
-  --acc: #d8d8d8;
-  --alert: #ffffff;
-  --warn: #c2c2c2;
+  /* Colores de estado: deben distinguirse a simple vista en el proyector */
+  --free: #22c55e;
+  --busy: #64748b;
+  --acc: #3b82f6;
+  --staff: #a855f7;
+  --alert: #f43f5e;
+  --warn: #f59e0b;
   --ground: #141414;
   --bldg: #2c2c2c;
   --bldg-text: #e6e6e6;
@@ -250,6 +252,38 @@ td {
 .pill.ok {
   background: color-mix(in srgb, var(--free) 15%, transparent);
   color: var(--free);
+}
+
+.pill.rol {
+  padding: 0 8px;
+  font-size: 11px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+
+.pill.rol.maestro {
+  background: color-mix(in srgb, var(--staff) 15%, transparent);
+  color: var(--staff);
+}
+
+.denegados td {
+  vertical-align: middle;
+}
+
+.denegados td.hora {
+  width: 1%;
+  color: var(--muted);
+}
+
+.rol-texto {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.rol-texto.maestro {
+  color: var(--staff);
+  font-weight: 600;
 }
 
 .log ul {

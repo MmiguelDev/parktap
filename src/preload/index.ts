@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { InfoServidor, RespuestaTap, TapEntrante } from '../shared/types'
+import type { Chip, EstadoParque, InfoServidor, RespuestaTap, TapEntrante } from '../shared/types'
 
 const parktap = {
   onTap: (callback: (tap: TapEntrante) => void): (() => void) => {
@@ -10,7 +10,16 @@ const parktap = {
   responderTap: (requestId: string, respuesta: RespuestaTap): void => {
     ipcRenderer.send('tap-resultado', { requestId, ...respuesta })
   },
-  infoServidor: (): Promise<InfoServidor> => ipcRenderer.invoke('servidor-info')
+  reportarEstado: (estado: EstadoParque): void => {
+    ipcRenderer.send('estado-parque', estado)
+  },
+  infoServidor: (): Promise<InfoServidor> => ipcRenderer.invoke('servidor-info'),
+  obtenerChips: (): Promise<Chip[]> => ipcRenderer.invoke('chips-obtener'),
+  onChips: (callback: (chips: Chip[]) => void): (() => void) => {
+    const listener = (_evento: IpcRendererEvent, chips: Chip[]): void => callback(chips)
+    ipcRenderer.on('chips', listener)
+    return () => ipcRenderer.removeListener('chips', listener)
+  }
 }
 
 if (process.contextIsolated) {

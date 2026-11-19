@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { InfoServidor } from '../../shared/types'
 import { listaUsuarios, usuarios } from '../../shared/usuarios'
-import { svgCampus, svgGrafica, svgLote, zonas } from './campus'
+import { svgCampus, svgGrafica, svgLote, svgLoteSimulado, zonas } from './campus'
 import { useParque } from './store'
-import { uidParaSimulacion } from '../../shared/cajones'
+import { useAlarma } from './alarma'
+import { establecerChips, uidParaSimulacion } from '../../shared/cajones'
 
 function hora(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString('es-MX', {
@@ -11,6 +12,13 @@ function hora(timestamp: number): string {
     minute: '2-digit',
     hour12: false
   })
+}
+
+// Motivos cortos para que quepan en la tabla sin cortarse.
+function motivoCorto(motivo: string): string {
+  if (motivo.includes('accesible')) return 'Lugar accesible sin permiso'
+  if (motivo.includes('maestros')) return 'Lugar de maestros'
+  return motivo
 }
 
 function marcaDe(elemento: Element, atributo: string): string | null {
@@ -38,25 +46,57 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     if (!window.parktap) return
     void window.parktap.infoServidor().then(setInfo)
-    return window.parktap.onTap((tap) => {
+    // Los chips registrados viven en el proceso main (data/chips.json);
+    // el renderer usa la misma lista para que procesarTap reconozca los UID reales.
+    void window.parktap.obtenerChips().then(establecerChips)
+    const quitarChips = window.parktap.onChips(establecerChips)
+    const quitarTap = window.parktap.onTap((tap) => {
       const resultado = useParque.getState().aplicar(tap.uidChip, tap.usuario, 'nfc')
       window.parktap.responderTap(tap.requestId, {
         ok: resultado.ok,
         mensaje: resultado.mensaje,
-        tipo: resultado.tipo
+        tipo: resultado.tipo,
+        alerta: resultado.infraccion ? resultado.motivoInfraccion : null
       })
     })
+    return () => {
+      quitarChips()
+      quitarTap()
+    }
   }, [])
 
   const ocupadosEm = cajones.filter((cajon) => cajon.estado === 'ocupado').length
   const infracciones = cajones.filter((cajon) => cajon.infraccion).length
+  useAlarma(infracciones > 0)
   const lista = zonas.map((zona) => (zona.id === 'em' ? { ...zona, occ: ocupadosEm } : zona))
+  // La app del usuario (celular) lee este estado para decirle dónde hay lugar.
+  useEffect(() => {
+    window.parktap?.reportarEstado({
+      cajones: cajones.map(({ id, tipo, estado, infraccion }) => ({
+        id,
+        tipo,
+        estado,
+        infraccion
+      })),
+      zonas: zonas.map((zona) => ({
+        id: zona.id,
+        name: zona.name,
+        tipo: zona.tipo,
+        cap: zona.cap,
+        occ:
+          zona.id === 'em'
+            ? cajones.filter((cajon) => cajon.estado === 'ocupado').length
+            : zona.occ,
+        demo: Boolean(zona.demo)
+      }))
+    })
+  }, [cajones])
   const capacidad = lista.reduce((suma, zona) => suma + zona.cap, 0)
   const ocupados = lista.reduce((suma, zona) => suma + zona.occ, 0)
   const zona = lista.find((item) => item.id === zonaId) ?? lista[1]
   const porcentaje = zona.occ / zona.cap
   const nivel = porcentaje >= 0.9 ? 'alert' : porcentaje >= 0.7 ? 'warn' : 'ok'
-  const libresEm = 12 - ocupadosEm
+  const libresZona = zona.cap - zona.occ
   const nfc = ultimo?.evento?.fuente === 'nfc'
   const grafica = svgGrafica()
   const esquema = info?.https ? 'https' : 'http'
@@ -144,11 +184,11 @@ export default function App(): React.JSX.Element {
             <div className="s">sin permiso o chip no registrado</div>
           </article>
           <article className="card kpi">
-            <h3>Infracciones accesibles</h3>
+            <h3>Infracciones</h3>
             <div className="v" style={{ color: 'var(--warn)' }}>
               {infracciones}
             </div>
-            <div className="s">cajón accesible sin permiso</div>
+            <div className="s">accesible o de maestros sin permiso</div>
           </article>
         </section>
 
@@ -192,8 +232,8 @@ export default function App(): React.JSX.Element {
               <h3>
                 {zona.name} · {zona.tipo === 'est' ? 'estudiantes' : 'personal'}
               </h3>
-              <span className={`pill ${libresEm ? 'ok' : 'alert'}`}>
-                {libresEm ? `Quedan ${libresEm}` : 'Lleno'}
+              <span className={`pill ${libresZona ? 'ok' : 'alert'}`}>
+                {libresZona ? `Quedan ${libresZona}` : 'Lleno'}
               </span>
             </div>
             <div className="zinfo">
@@ -206,7 +246,8 @@ export default function App(): React.JSX.Element {
               <span className={`pill ${nivel}`}>{Math.round(porcentaje * 100)}% ocupación</span>
               {!zona.demo && (
                 <p className="vacio" style={{ width: '100%' }}>
-                  Vista por cajón disponible solo en el lote de la demo (E–M).
+                  Ocupación simulada: este lote todavía no tiene chips NFC. El lote E–M es el de la
+                  demo en vivo.
                 </p>
               )}
             </div>
@@ -228,18 +269,23 @@ export default function App(): React.JSX.Element {
                 }}
               />
             )}
+            {!zona.demo && <div dangerouslySetInnerHTML={{ __html: svgLoteSimulado(zona) }} />}
             <div className="legend">
               <span>
                 <i style={{ background: 'var(--free)' }} />
-                Libre
+                Alumnos libre
+              </span>
+              <span>
+                <i style={{ background: 'var(--staff)' }} />
+                Maestros libre
+              </span>
+              <span>
+                <i style={{ background: 'var(--acc)' }} />
+                Accesible libre
               </span>
               <span>
                 <i style={{ background: 'var(--busy)' }} />
                 Ocupado
-              </span>
-              <span>
-                <i style={{ background: 'var(--acc)' }} />
-                Accesible
               </span>
               <span>
                 <i style={{ background: 'var(--alert)' }} />
@@ -255,30 +301,39 @@ export default function App(): React.JSX.Element {
             {denegados.length === 0 ? (
               <p className="vacio">Sin accesos denegados.</p>
             ) : (
-              <table>
+              <table className="denegados">
                 <thead>
                   <tr>
                     <th>Hora</th>
-                    <th>Placa</th>
-                    <th>Zona</th>
+                    <th>Quién</th>
                     <th>Motivo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {denegados.map((fila) => (
-                    <tr key={`${fila.timestamp}-${fila.motivo}`}>
-                      <td className="mono">{hora(fila.timestamp)}</td>
-                      <td className="mono">{fila.placa}</td>
-                      <td>{fila.zona}</td>
-                      <td>
-                        <span
-                          className={`pill ${fila.motivo.includes('accesible') ? 'alert' : 'warn'}`}
-                        >
-                          {fila.motivo}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {denegados.map((fila) => {
+                    const grave =
+                      fila.motivo.includes('accesible') || fila.motivo.includes('maestros')
+                    return (
+                      <tr key={`${fila.timestamp}-${fila.motivo}`}>
+                        <td className="mono hora">{hora(fila.timestamp)}</td>
+                        <td>
+                          <div className="mono">{fila.placa}</div>
+                          <div className={`rol-texto ${fila.rol ?? ''}`}>
+                            {fila.rol === 'maestro'
+                              ? 'Docente'
+                              : fila.rol === 'alumno'
+                                ? 'Alumno'
+                                : 'Desconocido'}
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`pill ${grave ? 'alert' : 'warn'}`}>
+                            {motivoCorto(fila.motivo)}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             )}
@@ -290,7 +345,7 @@ export default function App(): React.JSX.Element {
             ) : (
               <ul>
                 {registro.map((linea) => {
-                  const alerta = alertas.some((item) => item.timestamp === linea.timestamp)
+                  const alerta = alertas.find((item) => item.timestamp === linea.timestamp)
                   return (
                     <li key={`${linea.timestamp}-${linea.cajonId}-${linea.tipo}`}>
                       <span
@@ -306,9 +361,14 @@ export default function App(): React.JSX.Element {
                       <div>
                         <div>
                           {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa}{' '}
+                          <span className={`pill rol ${linea.rol}`}>
+                            {linea.rol === 'maestro' ? 'Docente' : 'Alumno'}
+                          </span>{' '}
                           {linea.tipo === 'entrada' ? 'en' : 'de'} E–M {linea.cajonId}
                         </div>
-                        {alerta && <span className="pill alert">sin permiso accesible</span>}
+                        {alerta && (
+                          <span className="pill alert">{alerta.texto.split(' · ').pop()}</span>
+                        )}
                       </div>
                       <time>{hora(linea.timestamp)}</time>
                     </li>

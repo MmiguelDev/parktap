@@ -70,3 +70,10 @@ export type Alerta = {
   timestamp: number
   texto: string
 }
+
+export type Denegado = {
+  timestamp: number
+  placa: string
+  zona: string
+  motivo: string
+}

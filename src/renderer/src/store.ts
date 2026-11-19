@@ -1,13 +1,21 @@
 import { create } from 'zustand'
 import { cajonesIniciales } from '../../shared/cajones'
 import { procesarTap } from '../../shared/procesarTap'
-import type { Alerta, Cajon, Fuente, LineaRegistro, ResultadoTap } from '../../shared/types'
+import type {
+  Alerta,
+  Cajon,
+  Denegado,
+  Fuente,
+  LineaRegistro,
+  ResultadoTap
+} from '../../shared/types'
 
 type Parque = {
   cajones: Cajon[]
   ultimo: ResultadoTap | null
   registro: LineaRegistro[]
   alertas: Alerta[]
+  denegados: Denegado[]
   usuarioId: string
   elegirUsuario: (usuarioId: string) => void
   aplicar: (uid: string, usuarioId: string, fuente: Fuente) => ResultadoTap
@@ -18,6 +26,7 @@ export const useParque = create<Parque>((set, get) => ({
   ultimo: null,
   registro: [],
   alertas: [],
+  denegados: [],
   usuarioId: 'ana',
   elegirUsuario: (usuarioId) => set({ usuarioId }),
   aplicar: (uid, usuarioId, fuente) => {
@@ -41,11 +50,30 @@ export const useParque = create<Parque>((set, get) => ({
             texto: `${resultado.evento.cajonId} · ${resultado.usuario.placa} · sin permiso accesible`
           }
         : null
+    const ahora = resultado.evento?.timestamp ?? Date.now()
+    const nuevos: Denegado[] = []
+    if (!resultado.ok) {
+      nuevos.push({
+        timestamp: ahora,
+        placa: resultado.usuario?.placa ?? '—',
+        zona: resultado.evento?.cajonId ? 'Lote E–M' : 'Acceso',
+        motivo: resultado.mensaje
+      })
+    }
+    if (resultado.infraccion && resultado.usuario) {
+      nuevos.push({
+        timestamp: ahora,
+        placa: resultado.usuario.placa,
+        zona: 'Lote E–M',
+        motivo: 'Cajón accesible sin permiso'
+      })
+    }
     set({
       cajones: resultado.cajones,
       ultimo: resultado,
       registro: linea ? [linea, ...get().registro].slice(0, 8) : get().registro,
-      alertas: alerta ? [alerta, ...get().alertas].slice(0, 4) : get().alertas
+      alertas: alerta ? [alerta, ...get().alertas].slice(0, 4) : get().alertas,
+      denegados: nuevos.length ? [...nuevos, ...get().denegados].slice(0, 5) : get().denegados
     })
     return resultado
   }

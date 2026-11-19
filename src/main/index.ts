@@ -8,8 +8,8 @@ let ventanaPrincipal: BrowserWindow | null = null
 
 function createWindow(): void {
   const ventana = new BrowserWindow({
-    width: 1200,
-    height: 760,
+    width: 1360,
+    height: 860,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#111111',

@@ -1,186 +1,43 @@
 import { useEffect, useState } from 'react'
-import { chips } from '../../shared/cajones'
-import { listaUsuarios } from '../../shared/usuarios'
 import type { InfoServidor } from '../../shared/types'
-import { MapaEstacionamiento } from './MapaEstacionamiento'
-import { PanelNfc } from './PanelNfc'
+import { listaUsuarios, usuarios } from '../../shared/usuarios'
+import { svgCampus, svgGrafica, svgLote, zonas } from './campus'
 import { useParque } from './store'
+import { uidParaSimulacion } from '../../shared/cajones'
 
 function hora(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  return new Date(timestamp).toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
 }
 
-function Simulador(): React.JSX.Element {
-  const aplicar = useParque((estado) => estado.aplicar)
+function marcaDe(elemento: Element, atributo: string): string | null {
+  return elemento.closest(`[${atributo}]`)?.getAttribute(atributo) ?? null
+}
+
+export default function App(): React.JSX.Element {
+  const cajones = useParque((estado) => estado.cajones)
+  const registro = useParque((estado) => estado.registro)
+  const alertas = useParque((estado) => estado.alertas)
+  const denegados = useParque((estado) => estado.denegados)
   const usuarioId = useParque((estado) => estado.usuarioId)
   const elegirUsuario = useParque((estado) => estado.elegirUsuario)
-  const usuarios = listaUsuarios()
-  const [cajonId, setCajonId] = useState(chips[0]?.cajonId ?? '')
-  const [uidManual, setUidManual] = useState('')
+  const aplicar = useParque((estado) => estado.aplicar)
+  const ultimo = useParque((estado) => estado.ultimo)
+  const [zonaId, setZonaId] = useState('em')
+  const [segundos, setSegundos] = useState(2)
   const [info, setInfo] = useState<InfoServidor | null>(null)
+
+  useEffect(() => {
+    const reloj = window.setInterval(() => setSegundos((valor) => (valor + 1) % 6), 1000)
+    return () => window.clearInterval(reloj)
+  }, [])
 
   useEffect(() => {
     if (!window.parktap) return
     void window.parktap.infoServidor().then(setInfo)
-  }, [])
-
-  const simular = (): void => {
-    const chip = chips.find((item) => item.cajonId === cajonId)
-    const uid = uidManual.trim() || chip?.uid || ''
-    aplicar(uid, usuarioId, 'simulacion')
-  }
-
-  const esquema = info?.https ? 'https' : 'http'
-
-  return (
-    <section className="rounded-xl border border-line bg-surface p-4">
-      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Plan B</h2>
-      <p className="mt-2 text-sm text-muted">
-        Elige usuario y cajón. El mismo procesarTap atiende la simulación y el celular.
-      </p>
-      <div className="mt-4 grid gap-3">
-        <label className="grid gap-1 text-sm text-muted">
-          Usuario
-          <select
-            className="min-h-11 rounded-lg border border-line bg-inset px-3 text-paper"
-            value={usuarioId}
-            onChange={(evento) => elegirUsuario(evento.target.value)}
-          >
-            {usuarios.map((usuario) => (
-              <option key={usuario.id} value={usuario.id}>
-                {usuario.nombre}
-                {usuario.permisoAccesible ? ' · permiso accesible' : ''}
-                {usuario.id === 'infractor' ? ' · infractor' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm text-muted">
-          Cajón
-          <select
-            className="min-h-11 rounded-lg border border-line bg-inset px-3 text-paper"
-            value={cajonId}
-            onChange={(evento) => setCajonId(evento.target.value)}
-          >
-            {chips.map((chip) => (
-              <option key={chip.uid} value={chip.cajonId}>
-                {chip.cajonId}
-                {chip.repuesto ? ' · repuesto' : ''}
-                {chip.cajonId === 'A-01' || chip.cajonId === 'A-02' ? ' · accesible' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm text-muted">
-          UID manual, opcional
-          <input
-            className="min-h-11 rounded-lg border border-line bg-inset px-3 font-mono text-paper"
-            value={uidManual}
-            placeholder="Déjalo vacío para usar el cajón"
-            onChange={(evento) => setUidManual(evento.target.value)}
-          />
-        </label>
-        <button
-          type="button"
-          className="min-h-12 rounded-lg bg-paper font-bold text-ink"
-          onClick={simular}
-        >
-          Simular tap
-        </button>
-      </div>
-      <div className="mt-5 text-sm text-muted">
-        {info ? (
-          info.ips.length > 0 ? (
-            <ul className="grid gap-1">
-              {info.ips.map((ip) => (
-                <li key={ip} className="font-mono text-paper">
-                  {esquema}://{ip}:{info.puerto}
-                </li>
-              ))}
-              {!info.https && <li>El celular necesita el certificado de docs/nfc-setup.md.</li>}
-            </ul>
-          ) : (
-            <p>No hay IP de red. Conéctate al hotspot para ver la dirección del celular.</p>
-          )
-        ) : (
-          <p>Abre la app de escritorio para ver la dirección del celular.</p>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function Ocupacion(): React.JSX.Element {
-  const libres = useParque(
-    (estado) => estado.cajones.filter((cajon) => cajon.estado === 'libre').length
-  )
-
-  return (
-    <section className="rounded-xl border border-line bg-surface p-4">
-      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Ocupación</h2>
-      <p className="mt-2 text-4xl leading-none font-bold">Quedan {libres} de 12</p>
-    </section>
-  )
-}
-
-function Alertas(): React.JSX.Element {
-  const alertas = useParque((estado) => estado.alertas)
-
-  return (
-    <section className="rounded-xl border border-line bg-surface p-4">
-      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Alertas</h2>
-      {alertas.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">Sin alertas</p>
-      ) : (
-        <ul className="mt-3 space-y-2 text-sm">
-          {alertas.map((alerta) => (
-            <li
-              key={`${alerta.timestamp}-${alerta.texto}`}
-              className="rounded-md bg-inset px-3 py-2"
-            >
-              <time className="font-mono text-xs text-muted">{hora(alerta.timestamp)}</time>
-              <div>{alerta.texto}</div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  )
-}
-
-function Registro(): React.JSX.Element {
-  const registro = useParque((estado) => estado.registro)
-
-  return (
-    <section className="rounded-xl border border-line bg-surface p-4">
-      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Registro en vivo</h2>
-      {registro.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">Todavía no hay entradas ni salidas.</p>
-      ) : (
-        <ul className="mt-3 space-y-2 text-sm">
-          {registro.map((linea) => (
-            <li
-              key={`${linea.timestamp}-${linea.cajonId}-${linea.tipo}`}
-              className="flex gap-3 border-b border-line py-2 last:border-0"
-            >
-              <time className="font-mono text-xs text-muted">{hora(linea.timestamp)}</time>
-              <span>
-                {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa} en {linea.cajonId}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  )
-}
-
-export default function App(): React.JSX.Element {
-  const ultimo = useParque((estado) => estado.ultimo)
-  const nfc = ultimo?.evento?.fuente === 'nfc'
-
-  useEffect(() => {
-    if (!window.parktap) return
     return window.parktap.onTap((tap) => {
       const resultado = useParque.getState().aplicar(tap.uidChip, tap.usuario, 'nfc')
       window.parktap.responderTap(tap.requestId, {
@@ -191,16 +48,29 @@ export default function App(): React.JSX.Element {
     })
   }, [])
 
+  const ocupadosEm = cajones.filter((cajon) => cajon.estado === 'ocupado').length
+  const infracciones = cajones.filter((cajon) => cajon.infraccion).length
+  const lista = zonas.map((zona) => (zona.id === 'em' ? { ...zona, occ: ocupadosEm } : zona))
+  const capacidad = lista.reduce((suma, zona) => suma + zona.cap, 0)
+  const ocupados = lista.reduce((suma, zona) => suma + zona.occ, 0)
+  const zona = lista.find((item) => item.id === zonaId) ?? lista[1]
+  const porcentaje = zona.occ / zona.cap
+  const nivel = porcentaje >= 0.9 ? 'alert' : porcentaje >= 0.7 ? 'warn' : 'ok'
+  const libresEm = 12 - ocupadosEm
+  const nfc = ultimo?.evento?.fuente === 'nfc'
+  const grafica = svgGrafica()
+  const esquema = info?.https ? 'https' : 'http'
+
   return (
-    <div className="min-h-screen bg-ink text-paper">
-      <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
-        <div className="flex items-center gap-2 text-xl font-bold">
+    <div>
+      <header className="switcher">
+        <div className="brand">
           <svg
             width="26"
             height="26"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#E7E7E7"
+            stroke="currentColor"
             strokeWidth="2.2"
             aria-hidden="true"
           >
@@ -209,20 +79,252 @@ export default function App(): React.JSX.Element {
           </svg>
           ParkTap
         </div>
-        <p className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-inset px-4 text-sm font-medium">
-          <span className={`h-2.5 w-2.5 rounded-full ${nfc ? 'bg-libre' : 'bg-muted'}`} />
-          {nfc ? 'NFC conectado' : 'Modo simulación'}
-        </p>
+        <label className="note" style={{ padding: 0, margin: 0 }}>
+          Usuario
+          <select
+            className="quien"
+            style={{ marginLeft: 8 }}
+            value={usuarioId}
+            onChange={(evento) => elegirUsuario(evento.target.value)}
+          >
+            {listaUsuarios().map((usuario) => (
+              <option key={usuario.id} value={usuario.id}>
+                {usuario.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span className="live">{nfc ? 'NFC conectado' : 'En vivo'}</span>
       </header>
-      <main className="mx-auto grid max-w-[1400px] items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <MapaEstacionamiento />
-        <aside className="flex flex-col gap-4">
-          <Ocupacion />
-          <Alertas />
-          <Registro />
-          <PanelNfc />
-          <Simulador />
-        </aside>
+      <p className="note">
+        Universidad Tecnológica de Chihuahua · estacionamientos del campus · da clic en una zona y
+        en un cajón del lote E–M.
+        {info && info.ips.length > 0 && (
+          <span className="mono">
+            {' '}
+            · celular {esquema}://{info.ips[0]}:{info.puerto}
+          </span>
+        )}
+      </p>
+
+      <main className="wrap">
+        <div className="rowhead" style={{ marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 32, lineHeight: 1.15, fontWeight: 800 }}>Panel de dirección</h1>
+            <p style={{ color: 'var(--muted)' }}>
+              Universidad Tecnológica de Chihuahua · estacionamientos del campus · hoy
+            </p>
+          </div>
+          <span className="live">En vivo · actualizado hace {segundos} s</span>
+        </div>
+
+        <section className="grid kpis" aria-label="Indicadores">
+          <article className="card kpi">
+            <h3>Autos en el campus</h3>
+            <div className="v">{ocupados}</div>
+            <div className="s">
+              de {capacidad} cajones · {Math.round((ocupados / capacidad) * 100)}% ocupado
+            </div>
+            <div className="bar">
+              <i style={{ width: `${(ocupados / capacidad) * 100}%` }} />
+            </div>
+          </article>
+          <article className="card kpi">
+            <h3>Lugares libres</h3>
+            <div className="v" style={{ color: 'var(--free)' }}>
+              {capacidad - ocupados}
+            </div>
+            <div className="s">disponibles ahora</div>
+          </article>
+          <article className="card kpi">
+            <h3>Accesos denegados hoy</h3>
+            <div className="v" style={{ color: 'var(--alert)' }}>
+              {denegados.length}
+            </div>
+            <div className="s">sin permiso o chip no registrado</div>
+          </article>
+          <article className="card kpi">
+            <h3>Infracciones accesibles</h3>
+            <div className="v" style={{ color: 'var(--warn)' }}>
+              {infracciones}
+            </div>
+            <div className="s">cajón accesible sin permiso</div>
+          </article>
+        </section>
+
+        <section className="grid main abajo">
+          <article className="card map">
+            <div className="rowhead">
+              <h3>Campus · ocupación por zona</h3>
+              <div className="legend" style={{ margin: 0 }}>
+                <span>
+                  <i style={{ background: 'var(--free)' }} />
+                  &lt; 70%
+                </span>
+                <span>
+                  <i style={{ background: 'var(--warn)' }} />
+                  70–90%
+                </span>
+                <span>
+                  <i style={{ background: 'var(--alert)' }} />
+                  &gt; 90%
+                </span>
+              </div>
+            </div>
+            <div
+              onClick={(evento) => {
+                const id = marcaDe(evento.target as Element, 'data-z')
+                if (id) setZonaId(id)
+              }}
+              onKeyDown={(evento) => {
+                if (evento.key !== 'Enter' && evento.key !== ' ') return
+                const id = marcaDe(evento.target as Element, 'data-z')
+                if (!id) return
+                evento.preventDefault()
+                setZonaId(id)
+              }}
+              dangerouslySetInnerHTML={{ __html: svgCampus(lista, zonaId) }}
+            />
+          </article>
+
+          <article className="card map">
+            <div className="rowhead">
+              <h3>
+                {zona.name} · {zona.tipo === 'est' ? 'estudiantes' : 'personal'}
+              </h3>
+              <span className={`pill ${libresEm ? 'ok' : 'alert'}`}>
+                {libresEm ? `Quedan ${libresEm}` : 'Lleno'}
+              </span>
+            </div>
+            <div className="zinfo">
+              <span>
+                <b>{zona.cap - zona.occ}</b> libres
+              </span>
+              <span>
+                <b>{zona.occ}</b> ocupados
+              </span>
+              <span className={`pill ${nivel}`}>{Math.round(porcentaje * 100)}% ocupación</span>
+              {!zona.demo && (
+                <p className="vacio" style={{ width: '100%' }}>
+                  Vista por cajón disponible solo en el lote de la demo (E–M).
+                </p>
+              )}
+            </div>
+            {zona.demo && (
+              <div
+                onClick={(evento) => {
+                  const id = marcaDe(evento.target as Element, 'data-id')
+                  if (id) aplicar(uidParaSimulacion(id), usuarioId, 'simulacion')
+                }}
+                onKeyDown={(evento) => {
+                  if (evento.key !== 'Enter' && evento.key !== ' ') return
+                  const id = marcaDe(evento.target as Element, 'data-id')
+                  if (!id) return
+                  evento.preventDefault()
+                  aplicar(uidParaSimulacion(id), usuarioId, 'simulacion')
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: svgLote(cajones, (id) => (id ? (usuarios[id]?.placa ?? null) : null))
+                }}
+              />
+            )}
+            <div className="legend">
+              <span>
+                <i style={{ background: 'var(--free)' }} />
+                Libre
+              </span>
+              <span>
+                <i style={{ background: 'var(--busy)' }} />
+                Ocupado
+              </span>
+              <span>
+                <i style={{ background: 'var(--acc)' }} />
+                Accesible
+              </span>
+              <span>
+                <i style={{ background: 'var(--alert)' }} />
+                Infracción
+              </span>
+            </div>
+          </article>
+        </section>
+
+        <section className="grid abajo">
+          <article className="card">
+            <h3>Accesos denegados recientes</h3>
+            {denegados.length === 0 ? (
+              <p className="vacio">Sin accesos denegados.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hora</th>
+                    <th>Placa</th>
+                    <th>Zona</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {denegados.map((fila) => (
+                    <tr key={`${fila.timestamp}-${fila.motivo}`}>
+                      <td className="mono">{hora(fila.timestamp)}</td>
+                      <td className="mono">{fila.placa}</td>
+                      <td>{fila.zona}</td>
+                      <td>
+                        <span
+                          className={`pill ${fila.motivo.includes('accesible') ? 'alert' : 'warn'}`}
+                        >
+                          {fila.motivo}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </article>
+          <article className="card log">
+            <h3>Registro en vivo</h3>
+            {registro.length === 0 ? (
+              <p className="vacio">Todavía no hay entradas ni salidas.</p>
+            ) : (
+              <ul>
+                {registro.map((linea) => {
+                  const alerta = alertas.some((item) => item.timestamp === linea.timestamp)
+                  return (
+                    <li key={`${linea.timestamp}-${linea.cajonId}-${linea.tipo}`}>
+                      <span
+                        className="dot"
+                        style={{
+                          background: alerta
+                            ? 'var(--alert)'
+                            : linea.tipo === 'entrada'
+                              ? 'var(--free)'
+                              : 'var(--busy)'
+                        }}
+                      />
+                      <div>
+                        <div>
+                          {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa}{' '}
+                          {linea.tipo === 'entrada' ? 'en' : 'de'} E–M {linea.cajonId}
+                        </div>
+                        {alerta && <span className="pill alert">sin permiso accesible</span>}
+                      </div>
+                      <time>{hora(linea.timestamp)}</time>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </article>
+          <article className="card">
+            <h3>
+              Ocupación por hora{' '}
+              <span style={{ textTransform: 'none', letterSpacing: 0 }}>(datos simulados)</span>
+            </h3>
+            <div dangerouslySetInnerHTML={{ __html: grafica }} />
+          </article>
+        </section>
       </main>
     </div>
   )

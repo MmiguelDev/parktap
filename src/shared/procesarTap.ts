@@ -72,7 +72,7 @@ export function procesarTap(
     tipo: 'entrada',
     usuario: persona,
     infraccion,
-    cajones: procesarEvento(cajones, evento, usuarioId),
+    cajones: procesarEvento(cajones, evento, usuarioId, infraccion),
     evento
   }
 }

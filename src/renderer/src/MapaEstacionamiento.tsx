@@ -6,7 +6,7 @@ import { useParque } from './store'
 
 function Auto(): React.JSX.Element {
   return (
-    <svg viewBox="0 0 80 120" className="h-14 w-9" aria-hidden="true">
+    <svg viewBox="0 0 80 120" className="h-16 w-10" aria-hidden="true">
       <rect x="14" y="8" width="52" height="104" rx="16" fill="#D4D4D4" />
       <rect x="22" y="20" width="36" height="24" rx="4" fill="#141414" opacity="0.65" />
       <rect x="22" y="78" width="36" height="16" rx="4" fill="#141414" opacity="0.4" />
@@ -61,7 +61,7 @@ export function MapaEstacionamiento(): React.JSX.Element {
   }, [cajones])
 
   const pintarFila = (fila: 'A' | 'B'): React.JSX.Element => (
-    <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
       {cajones
         .filter((cajon) => filaDe(cajon.id) === fila)
         .map((cajon) => (
@@ -80,20 +80,40 @@ export function MapaEstacionamiento(): React.JSX.Element {
       className="rounded-xl border border-line bg-surface p-4"
       aria-label="Mapa del estacionamiento"
     >
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold">Lote de la demo</h2>
-        <p className="text-sm text-muted">
-          Vista desde arriba. El clic usa a {usuarios[usuarioId]?.nombre ?? 'nadie'}.
-        </p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Lote de la demo</h1>
+          <p className="text-sm text-muted">
+            Vista desde arriba · da clic en un cajón para ocuparlo o liberarlo
+          </p>
+        </div>
+        <ul className="flex flex-wrap gap-3 text-xs text-muted">
+          <li className="inline-flex items-center gap-1.5">
+            <i className="h-3 w-3 rounded-sm bg-libre" />
+            Libre
+          </li>
+          <li className="inline-flex items-center gap-1.5">
+            <i className="h-3 w-3 rounded-sm bg-ocupado" />
+            Ocupado
+          </li>
+          <li className="inline-flex items-center gap-1.5">
+            <i className="h-3 w-3 rounded-sm bg-accesible" />
+            Accesible
+          </li>
+          <li className="inline-flex items-center gap-1.5">
+            <i className="parpadea h-3 w-3 rounded-sm bg-ocupado" />
+            Infracción
+          </li>
+        </ul>
       </div>
       <div className="rounded-lg bg-asfalto p-3">
         {pintarFila('A')}
-        <div className="relative my-3 flex h-14 items-center">
-          <span className="z-10 rounded-full border border-marca px-3 py-1 text-xs font-bold text-marca">
+        <div className="relative my-3 flex h-16 items-center justify-between px-2">
+          <span className="rounded-full border border-marca px-3 py-1 text-xs font-bold tracking-wide text-marca">
             ENTRADA
           </span>
           <svg
-            className="absolute inset-x-24 h-6 text-marca"
+            className="pointer-events-none absolute right-8 left-28 h-6 text-marca"
             viewBox="0 0 640 24"
             fill="currentColor"
             aria-hidden="true"
@@ -101,24 +121,10 @@ export function MapaEstacionamiento(): React.JSX.Element {
             <rect y="10" width="640" height="4" opacity="0.35" />
             <path d="M80 4h28l14 8-14 8H80l14-8zM220 4h28l14 8-14 8h-28l14-8zM360 4h28l14 8-14 8h-28l14-8zM500 4h28l14 8-14 8h-28l14-8z" />
           </svg>
-          <span className="z-10 ml-auto text-xs font-bold text-marca">CALLE</span>
+          <span className="relative text-xs font-bold tracking-wide text-marca">CALLE</span>
         </div>
         {pintarFila('B')}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
-        <li className="inline-flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded-sm bg-libre" />
-          Libre
-        </li>
-        <li className="inline-flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded-sm bg-ocupado" />
-          Ocupado
-        </li>
-        <li className="inline-flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded-sm bg-accesible" />
-          Accesible
-        </li>
-      </ul>
     </section>
   )
 }
@@ -133,7 +139,13 @@ function CajonSpot({
   onElegir: () => void
 }): React.JSX.Element {
   const ocupado = cajon.estado === 'ocupado'
-  const estado = ocupado ? 'ocupado' : cajon.accesible ? 'accesible' : 'libre'
+  const estado = cajon.infraccion
+    ? 'infraccion'
+    : ocupado
+      ? 'ocupado'
+      : cajon.accesible
+        ? 'accesible'
+        : 'libre'
   const placa = cajon.ocupante ? usuarios[cajon.ocupante]?.placa : null
   const mostrarAuto = ocupado || saliendo
 
@@ -141,7 +153,7 @@ function CajonSpot({
     <button
       type="button"
       data-state={estado}
-      className="cajon relative h-32 rounded-md border-2 text-left"
+      className="cajon relative h-36 rounded-md border-2 text-left"
       aria-label={`Cajón ${cajon.id} ${ocupado ? 'ocupado' : 'libre'}${cajon.accesible ? ', accesible' : ''}`}
       onClick={onElegir}
     >

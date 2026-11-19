@@ -33,7 +33,7 @@ function Simulador(): React.JSX.Element {
   const esquema = info?.https ? 'https' : 'http'
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-5">
+    <section className="rounded-xl border border-line bg-surface p-4">
       <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Plan B</h2>
       <p className="mt-2 text-sm text-muted">
         Elige usuario y cajón. El mismo procesarTap atiende la simulación y el celular.
@@ -110,31 +110,62 @@ function Simulador(): React.JSX.Element {
   )
 }
 
-function Registro(): React.JSX.Element {
-  const registro = useParque((estado) => estado.registro)
+function Ocupacion(): React.JSX.Element {
   const libres = useParque(
     (estado) => estado.cajones.filter((cajon) => cajon.estado === 'libre').length
   )
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-5">
+    <section className="rounded-xl border border-line bg-surface p-4">
       <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Ocupación</h2>
       <p className="mt-2 text-4xl leading-none font-bold">Quedan {libres} de 12</p>
-      <h2 className="mt-5 text-xs font-medium tracking-widest text-muted uppercase">
-        Registro en vivo
-      </h2>
+    </section>
+  )
+}
+
+function Alertas(): React.JSX.Element {
+  const alertas = useParque((estado) => estado.alertas)
+
+  return (
+    <section className="rounded-xl border border-line bg-surface p-4">
+      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Alertas</h2>
+      {alertas.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">Sin alertas</p>
+      ) : (
+        <ul className="mt-3 space-y-2 text-sm">
+          {alertas.map((alerta) => (
+            <li
+              key={`${alerta.timestamp}-${alerta.texto}`}
+              className="rounded-md bg-inset px-3 py-2"
+            >
+              <time className="font-mono text-xs text-muted">{hora(alerta.timestamp)}</time>
+              <div>{alerta.texto}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function Registro(): React.JSX.Element {
+  const registro = useParque((estado) => estado.registro)
+
+  return (
+    <section className="rounded-xl border border-line bg-surface p-4">
+      <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Registro en vivo</h2>
       {registro.length === 0 ? (
         <p className="mt-3 text-sm text-muted">Todavía no hay entradas ni salidas.</p>
       ) : (
-        <ul className="mt-3 grid gap-2 text-sm">
+        <ul className="mt-3 space-y-2 text-sm">
           {registro.map((linea) => (
             <li
               key={`${linea.timestamp}-${linea.cajonId}-${linea.tipo}`}
-              className="flex gap-3 border-b border-line py-2"
+              className="flex gap-3 border-b border-line py-2 last:border-0"
             >
               <time className="font-mono text-xs text-muted">{hora(linea.timestamp)}</time>
               <span>
-                {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa} · {linea.cajonId}
+                {linea.tipo === 'entrada' ? 'Entrada' : 'Salida'} · {linea.placa} en {linea.cajonId}
               </span>
             </li>
           ))}
@@ -162,7 +193,7 @@ export default function App(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-ink text-paper">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
+      <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
         <div className="flex items-center gap-2 text-xl font-bold">
           <svg
             width="26"
@@ -178,18 +209,20 @@ export default function App(): React.JSX.Element {
           </svg>
           ParkTap
         </div>
-        <p className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-inset px-4 text-sm">
+        <p className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-inset px-4 text-sm font-medium">
           <span className={`h-2.5 w-2.5 rounded-full ${nfc ? 'bg-libre' : 'bg-muted'}`} />
           {nfc ? 'NFC conectado' : 'Modo simulación'}
         </p>
       </header>
-      <main className="mx-auto grid max-w-[1400px] items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <main className="mx-auto grid max-w-[1400px] items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <MapaEstacionamiento />
-        <div className="grid gap-4">
+        <aside className="flex flex-col gap-4">
+          <Ocupacion />
+          <Alertas />
           <Registro />
           <PanelNfc />
           <Simulador />
-        </div>
+        </aside>
       </main>
     </div>
   )

@@ -8,9 +8,9 @@ export function PanelNfc(): React.JSX.Element {
   const ultimo = useParque((estado) => estado.ultimo)
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-5" aria-live="polite">
+    <section className="rounded-xl border border-line bg-surface p-4" aria-live="polite">
       <h2 className="text-xs font-medium tracking-widest text-muted uppercase">Panel NFC</h2>
-      <p className="mt-3 text-4xl leading-none font-bold">
+      <p className="mt-3 text-2xl leading-none font-bold">
         {ultimo?.mensaje ?? 'Esperando tap...'}
       </p>
       {ultimo?.infraccion && (

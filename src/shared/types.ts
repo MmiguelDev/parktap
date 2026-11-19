@@ -16,6 +16,7 @@ export type Cajon = {
   estado: EstadoCajon
   ocupante: string | null
   desde: number | null
+  infraccion: boolean
 }
 
 export type Usuario = {
@@ -63,4 +64,9 @@ export type LineaRegistro = {
   placa: string
   cajonId: string
   tipo: 'entrada' | 'salida'
+}
+
+export type Alerta = {
+  timestamp: number
+  texto: string
 }

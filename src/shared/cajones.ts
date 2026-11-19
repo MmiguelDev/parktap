@@ -42,7 +42,8 @@ export function cajonesIniciales(): Cajon[] {
         accesible: id === 'A-01' || id === 'A-02',
         estado: 'libre',
         ocupante: null,
-        desde: null
+        desde: null,
+        infraccion: false
       })
     }
   }

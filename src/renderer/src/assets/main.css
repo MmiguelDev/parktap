@@ -31,6 +31,22 @@
   border-color: #4c78b0;
 }
 
+.cajon[data-state='infraccion'] {
+  background: color-mix(in srgb, #d25555 40%, transparent);
+  border-color: #d25555;
+  animation: blink 1s steps(2) infinite;
+}
+
+.parpadea {
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 @keyframes entrar {
   from {
     opacity: 0;
@@ -85,7 +101,9 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   .auto-entra,
-  .auto-sale {
+  .auto-sale,
+  .parpadea,
+  .cajon[data-state='infraccion'] {
     animation: none;
   }
 }
